@@ -1,0 +1,54 @@
+# Insightful — Hub Dashboard
+# Central service registry + health monitor UI (PHP)
+# Admin UI: http://hub.insightful-projects.com  │  http://localhost:3003
+# Usage: podman compose -f compose/insightful-hub.yml up -d
+
+name: insightful-hub
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  hub:
+    image: php:8.3-cli-alpine
+    container_name: insightful-hub
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "127.0.0.1:${HUB_PORT:-3003}:80"
+    working_dir: /var/www/html
+    command: php -S 0.0.0.0:80 -t /var/www/html
+    volumes:
+      - ../insightful-hub:/var/www/html
+      - type: bind
+        source: ./../data/hub
+        target: /var/www/html/data
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'echo file_get_contents(\"http://localhost:80/\");' 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

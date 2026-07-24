@@ -1,0 +1,106 @@
+{
+  "updatedAt": "2026-03-06T12:11:52.103Z",
+  "createdAt": "2026-03-06T12:11:51.153Z",
+  "id": "FWs4Eksts5DyBL8g",
+  "name": "Quick Finance App — Initiator",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-finance-flow",
+        "options": {}
+      },
+      "id": "node_trigger",
+      "name": "Internal Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "finance-initiator-trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.body.client_phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"quick_finance_application\",\n    \"language\": {\n      \"code\": \"en_US\"\n    },\n    \"components\": [\n      {\n        \"type\": \"button\",\n        \"sub_type\": \"flow\",\n        \"index\": \"0\",\n        \"parameters\": [\n          {\n            \"type\": \"action\",\n            \"action\": {\n              \"flow_token\": \"{{ $json.body.client_phone }}_\" + Date.now(),\n              \"flow_action_data\": {\n                \"client_name\": \"{{ $json.body.client_name }}\"\n              }\n            }\n          }\n        ]\n      }\n    ]\n  }\n}",
+        "options": {}
+      },
+      "id": "node_send_template",
+      "name": "Send WhatsApp Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Internal Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "ed3e3a19-32d1-45bd-aa12-15e297bcb3b6",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-06T12:11:51.156Z",
+      "createdAt": "2026-03-06T12:11:51.156Z",
+      "role": "workflow:owner",
+      "workflowId": "FWs4Eksts5DyBL8g",
+      "projectId": "pDpkMhqHd9AsGCQZ",
+      "project": {
+        "updatedAt": "2026-02-19T08:44:15.532Z",
+        "createdAt": "2026-02-19T08:42:49.402Z",
+        "id": "pDpkMhqHd9AsGCQZ",
+        "name": "Kyle Rebeiro <insightful.projects777@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "99de3673-3ed8-4b97-a488-c3cc4fb0644d"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

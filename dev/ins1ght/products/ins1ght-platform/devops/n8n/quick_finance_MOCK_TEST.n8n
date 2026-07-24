@@ -1,0 +1,388 @@
+{
+  "updatedAt": "2026-03-05T11:45:58.422Z",
+  "createdAt": "2026-03-05T11:45:57.269Z",
+  "id": "cM12KviuN64b9Zpj",
+  "name": "Quick Finance App — MOCK TEST MODE",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-flow-test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node_webhook",
+      "name": "WhatsApp Flow Webhook (TEST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "whatsapp-flow-finance-test"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── MOCK TEST: Parse payload (no decryption needed in test mode) ──\nconst body = $input.first().json.body || $input.first().json;\n\nif (body?.['hub.mode'] === 'subscribe') {\n  return [{ json: { _type: 'HEALTH_CHECK', challenge: body['hub.challenge'] || 'test_challenge' } }];\n}\n\nconst payload = typeof body === 'string' ? JSON.parse(body) : body;\nconst screenData = payload?.data || payload || {};\nconst flowToken = payload?.flow_token || 'MOCK_TOKEN';\n\nif (payload?.action === 'ping') {\n  return [{ json: { _type: 'HEALTH_CHECK', challenge: payload.challenge || '' } }];\n}\n\nreturn [{\n  json: {\n    _type: 'FORM_SUBMISSION',\n    flow_token:         flowToken,\n    full_name:          screenData.full_name || '',\n    id_number:          screenData.id_number || '',\n    cell_phone:         screenData.cell_phone || '',\n    email:              screenData.email || '',\n    marital_status:     screenData.marital_status || '',\n    date_married:       screenData.date_married || '',\n    home_address:       screenData.home_address || '',\n    period_at_address:  screenData.period_at_address || '',\n    accommodation_type: screenData.accommodation_type || '',\n    kin_full_name:      screenData.kin_full_name || '',\n    kin_address:        screenData.kin_address || '',\n    kin_contact_number: screenData.kin_contact_number || '',\n    employer_name:      screenData.employer_name || '',\n    employer_address:   screenData.employer_address || '',\n    period_at_employer: screenData.period_at_employer || '',\n    work_telephone:     screenData.work_telephone || '',\n    salary_gross:       screenData.salary_gross || '',\n    salary_net:         screenData.salary_net || '',\n    expense_bond_rent:  screenData.expense_bond_rent || '',\n    expense_car:        screenData.expense_car || '',\n    expense_loans:      screenData.expense_loans || '',\n    expense_cellphone:  screenData.expense_cellphone || '',\n    expense_policies:   screenData.expense_policies || '',\n    expense_food_entertainment: screenData.expense_food_entertainment || '',\n    expense_credit_card: screenData.expense_credit_card || '',\n    expense_furniture:  screenData.expense_furniture || '',\n    bank_name:          screenData.bank_name || '',\n    bank_account_number: screenData.bank_account_number || '',\n    account_type:       screenData.account_type || '',\n    all_documents:      screenData.all_documents || [],\n    consent:            screenData.consent || false\n  }\n}];\n"
+      },
+      "id": "node_parse_payload",
+      "name": "Parse Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check_health",
+              "leftValue": "={{ $json._type }}",
+              "rightValue": "HEALTH_CHECK",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_is_health_check",
+      "name": "Health Check?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ challenge: $json.challenge }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_health",
+      "name": "Respond — Health OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Validate required fields ──────────────────────────────────────\nconst d = $input.first().json;\n\nconst required = [\n  ['full_name',           'Full Name'],\n  ['id_number',           'Identity Number'],\n  ['cell_phone',          'Cell Phone'],\n  ['home_address',        'Home Address'],\n  ['employer_name',       'Employer Name'],\n  ['salary_gross',        'Gross Salary'],\n  ['salary_net',          'Net Salary'],\n  ['bank_name',           'Bank Name'],\n  ['bank_account_number', 'Account Number'],\n];\n\nconst missing = required\n  .filter(([field]) => !d[field] || String(d[field]).trim() === '')\n  .map(([, label]) => label);\n\nconst idValid = /^\\d{13}$/.test(String(d.id_number || ''));\nif (!idValid) missing.push('Valid 13-digit Identity Number');\n\nif (!d.consent) missing.push('Consent confirmation');\n\nconst docs = Array.isArray(d.all_documents) ? d.all_documents : [];\n\nreturn [{\n  json: {\n    ...d,\n    _validation_passed: missing.length === 0 && docs.length >= 5,\n    _validation_errors: missing,\n    _doc_count: docs.length,\n    _docs: docs\n  }\n}];\n"
+      },
+      "id": "node_validate_fields",
+      "name": "Validate Form Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check_valid",
+              "leftValue": "={{ $json._validation_passed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_validation_gate",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ screen: 'DOCUMENTS_UPLOAD', data: { error_message: '⚠️ Missing: ' + $json._validation_errors.join(', ') } }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_validation_fail",
+      "name": "Respond — Validation Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── MOCK: Simulate document download + vision check ──────────────\n// In production this hits the Meta Graph API and OpenAI Vision.\n// In test mode we return realistic mock results for each media ID.\n\nconst docs = $json._docs || [];\nconst applicantData = {\n  full_name:          $json.full_name,\n  id_number:          $json.id_number,\n  cell_phone:         $json.cell_phone,\n  email:              $json.email,\n  marital_status:     $json.marital_status,\n  date_married:       $json.date_married,\n  home_address:       $json.home_address,\n  period_at_address:  $json.period_at_address,\n  accommodation_type: $json.accommodation_type,\n  kin_full_name:      $json.kin_full_name,\n  kin_address:        $json.kin_address,\n  kin_contact_number: $json.kin_contact_number,\n  employer_name:      $json.employer_name,\n  employer_address:   $json.employer_address,\n  period_at_employer: $json.period_at_employer,\n  work_telephone:     $json.work_telephone,\n  salary_gross:       $json.salary_gross,\n  salary_net:         $json.salary_net,\n  expense_bond_rent:  $json.expense_bond_rent,\n  expense_car:        $json.expense_car,\n  expense_loans:      $json.expense_loans,\n  expense_cellphone:  $json.expense_cellphone,\n  expense_policies:   $json.expense_policies,\n  expense_food_entertainment: $json.expense_food_entertainment,\n  expense_credit_card: $json.expense_credit_card,\n  expense_furniture:  $json.expense_furniture,\n  bank_name:          $json.bank_name,\n  bank_account_number: $json.bank_account_number,\n  account_type:       $json.account_type,\n  flow_token:         $json.flow_token\n};\n\n// ── Simulate vision results (change these to test failure paths) ──\n// Set vision_passed: false on any entry to simulate a bad image.\nconst mockVisionResults = [\n  { media_id: docs[0], doc_type: 'ID Document',           vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[1], doc_type: \"Driver's Licence\",      vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[2], doc_type: 'Payslip January',       vision_passed: true,  quality_score: 'acceptable', issues: [] },\n  { media_id: docs[3], doc_type: 'Payslip February',      vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[4], doc_type: 'Payslip March',         vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[5], doc_type: 'Bank Statement January',vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[6], doc_type: 'Bank Statement February',vision_passed: true, quality_score: 'good',       issues: [] },\n  { media_id: docs[7], doc_type: 'Bank Statement March',  vision_passed: true,  quality_score: 'good',       issues: [] },\n  { media_id: docs[8], doc_type: 'Proof of Residence',    vision_passed: true,  quality_score: 'good',       issues: [] },\n];\n\n// Trim to actual number of docs uploaded\nconst results = docs.map((id, i) => ({\n  media_id:      id,\n  doc_index:     i,\n  document_type: mockVisionResults[i]?.doc_type || `Document ${i+1}`,\n  vision_passed: mockVisionResults[i]?.vision_passed ?? true,\n  quality_score: mockVisionResults[i]?.quality_score || 'good',\n  issues:        mockVisionResults[i]?.issues || [],\n  user_message:  mockVisionResults[i]?.vision_passed === false\n    ? `Please retake your ${mockVisionResults[i]?.doc_type} — image is ${(mockVisionResults[i]?.issues || []).join(' and ')}.`\n    : '',\n  _applicant_data: applicantData\n}));\n\nconst failedDocs = results.filter(r => !r.vision_passed);\nconst failMessages = failedDocs\n  .map(r => `• ${r.document_type}: ${r.user_message}`)\n  .join('\\n');\n\nreturn [{\n  json: {\n    all_passed:      failedDocs.length === 0,\n    failed_count:    failedDocs.length,\n    fail_messages:   failMessages,\n    all_results:     results,\n    _applicant_data: applicantData,\n    _mock_mode:      true\n  }\n}];\n"
+      },
+      "id": "node_mock_vision",
+      "name": "🧪 MOCK — Vision Check All Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "all_passed",
+              "leftValue": "={{ $json.all_passed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_docs_pass_gate",
+      "name": "All Documents Clear?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  screen: 'DOCUMENTS_UPLOAD',\n  data: {\n    error_message: '📸 Some documents need to be re-uploaded:\\n\\n' + $json.fail_messages + '\\n\\nPlease upload clearer photos and try again.'\n  }\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_doc_fail",
+      "name": "Respond — Docs Failed (Re-upload)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Format final application record ──────────────────────────────\nconst d = $json._applicant_data;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    submitted_at:       now,\n    status:             'PENDING_REVIEW',\n    _mock_mode:         true,\n    full_name:          d.full_name,\n    id_number:          d.id_number,\n    cell_phone:         d.cell_phone,\n    email:              d.email,\n    marital_status:     d.marital_status,\n    date_married:       d.date_married,\n    home_address:       d.home_address,\n    period_at_address:  d.period_at_address,\n    accommodation_type: d.accommodation_type,\n    kin_full_name:      d.kin_full_name,\n    kin_address:        d.kin_address,\n    kin_contact_number: d.kin_contact_number,\n    employer_name:      d.employer_name,\n    employer_address:   d.employer_address,\n    period_at_employer: d.period_at_employer,\n    work_telephone:     d.work_telephone,\n    salary_gross:       d.salary_gross,\n    salary_net:         d.salary_net,\n    expenses: {\n      bond_rent:          d.expense_bond_rent,\n      car:                d.expense_car,\n      loans:              d.expense_loans,\n      cellphone:          d.expense_cellphone,\n      policies:           d.expense_policies,\n      food_entertainment: d.expense_food_entertainment,\n      credit_card:        d.expense_credit_card,\n      furniture:          d.expense_furniture\n    },\n    bank_name:           d.bank_name,\n    bank_account_number: d.bank_account_number,\n    account_type:        d.account_type,\n    flow_token:          d.flow_token,\n    document_results:    $json.all_results\n  }\n}];\n"
+      },
+      "id": "node_format_application",
+      "name": "Format Application Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  status: 'SUCCESS',\n  message: '✅ [MOCK] Application received for ' + $json.full_name,\n  submitted_at: $json.submitted_at,\n  mock_mode: true,\n  application_summary: {\n    name: $json.full_name,\n    id: $json.id_number,\n    employer: $json.employer_name,\n    gross_salary: 'R' + $json.salary_gross,\n    net_salary: 'R' + $json.salary_net,\n    bank: $json.bank_name,\n    documents_checked: $json.document_results?.length\n  }\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_success",
+      "name": "🧪 MOCK Respond — Success Summary",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "WhatsApp Flow Webhook (TEST)": {
+      "main": [
+        [
+          {
+            "node": "Parse Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Payload": {
+      "main": [
+        [
+          {
+            "node": "Health Check?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Check?": {
+      "main": [
+        [
+          {
+            "node": "Respond — Health OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Form Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Form Fields": {
+      "main": [
+        [
+          {
+            "node": "Validation Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Passed?": {
+      "main": [
+        [
+          {
+            "node": "🧪 MOCK — Vision Check All Docs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond — Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 MOCK — Vision Check All Docs": {
+      "main": [
+        [
+          {
+            "node": "All Documents Clear?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Documents Clear?": {
+      "main": [
+        [
+          {
+            "node": "Format Application Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond — Docs Failed (Re-upload)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Application Record": {
+      "main": [
+        [
+          {
+            "node": "🧪 MOCK Respond — Success Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "52ffd246-3653-4d7b-b8e1-ffede69e054b",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T11:45:57.272Z",
+      "createdAt": "2026-03-05T11:45:57.272Z",
+      "role": "workflow:owner",
+      "workflowId": "cM12KviuN64b9Zpj",
+      "projectId": "pDpkMhqHd9AsGCQZ",
+      "project": {
+        "updatedAt": "2026-02-19T08:44:15.532Z",
+        "createdAt": "2026-02-19T08:42:49.402Z",
+        "id": "pDpkMhqHd9AsGCQZ",
+        "name": "Kyle Rebeiro <insightful.projects777@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "99de3673-3ed8-4b97-a488-c3cc4fb0644d"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

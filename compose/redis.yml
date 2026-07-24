@@ -1,0 +1,47 @@
+# Insightful — Redis cache + rate limit store + pub/sub
+# Shared by all stacks on the insightful network.
+# Usage: podman compose -f compose/redis.yml up -d
+
+name: redis
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  redis:
+    image: docker.io/redis:7-alpine
+    container_name: insightful-redis
+    restart: unless-stopped
+    stop_grace_period: 10s
+    volumes:
+      - redis-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  redis-data:

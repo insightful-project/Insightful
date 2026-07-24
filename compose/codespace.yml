@@ -1,0 +1,106 @@
+# Insightful — codeSpace backend stack
+# Java Postgres-backed service for entity-based RPC operations.
+# NOT exposed to host — accessed via Docker internal network only.
+# DB exposed at host port 5436 for CloudBeaver / psql.
+# CloudBeaver GUI: ./start.sh cloudbeaver  → connect to codespace-db:5432
+#
+# Usage: podman compose -f compose/codespace.yml up -d
+
+name: codespace
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  codespace-db:
+    image: docker.io/postgres:16-alpine
+    container_name: codespace-db
+    restart: unless-stopped
+    stop_grace_period: 30s
+    env_file: .env
+    environment:
+      POSTGRES_DB: codespace
+      POSTGRES_USER: codespace_user
+      POSTGRES_PASSWORD: ${CODESPACE_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${CODESPACE_DB_PORT:-5436}:5432"
+    volumes:
+      - codespace-postgres:/var/lib/postgresql/data
+    networks:
+      - insightful
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codespace_user -d codespace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  codespace-java:
+    build:
+      context: ../dev/insightful-hub/services/codespace-java
+      dockerfile: Dockerfile.dev
+    container_name: codespace-java
+    restart: unless-stopped
+    stop_grace_period: 30s
+    # No host ports — internal network only
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      CODESPACE_LOG_DIR: /var/log/codespace
+      CODESPACE_DB_URL: jdbc:postgresql://codespace-db:5432/codespace
+      CODESPACE_DB_USER: codespace_user
+      CODESPACE_DB_PASSWORD: ${CODESPACE_DB_PASSWORD}
+    volumes:
+      - ../dev/insightful-hub/services/codespace-java:/app:z
+      - ../data/codespace/logs:/var/log/codespace:z
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7500/api/codex/logs 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      codespace-db:
+        condition: service_healthy
+    networks:
+      - insightful
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  codespace-postgres:

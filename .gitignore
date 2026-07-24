@@ -1,0 +1,62 @@
+# Secrets — must never be committed
+.env
+.env.*
+*.env
+!.env.example
+*.key
+*.pem
+*.cert
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker
+.docker/
+
+# Project data (bind-mounted from compose — portable across WSL/VPS)
+/data/
+
+# Build artifacts (from dev sub-projects)
+.m2/
+target/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+vendor/
+
+# Dev-level opencode scratch
+dev/.opencode/
+
+# Sensitive platform file
+dev/ins1ght/products/ins1ght-platform/n8n-recovery-codes.txt
+
+# Spoke repos (independent git repos with their own remotes)
+dev/ins1ght/products/life-os-v2/
+dev/insightful-hub/
+dev/ins1ght/clients/
+odysseus/
+encrypt/

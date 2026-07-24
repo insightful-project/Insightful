@@ -1,0 +1,783 @@
+{
+  "updatedAt": "2026-03-06T10:58:28.331Z",
+  "createdAt": "2026-03-05T08:37:42.498Z",
+  "id": "K29U3BoeeU84aiki",
+  "name": "Quick Finance App",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-flow",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node_webhook",
+      "name": "WhatsApp Flow Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        304
+      ],
+      "webhookId": "whatsapp-flow-finance"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// META WHATSAPP FLOWS — Payload Handler\n// Handles two request types:\n//   1. HEALTH_CHECK  — Meta pinging to verify the endpoint is alive\n//   2. DATA_EXCHANGE — Called by the Flow when the user hits Submit\n//                      on the DOCUMENTS_UPLOAD screen (terminal)\n// ────────────────────────���────────���───────────────────────────────\n\nconst body = $input.first().json.body;\nconst headers = $input.first().json.headers;\n\n// ── Decrypt payload (requires private key in env) ─────────────────\n// For production: decrypt using your RSA private key.\n// Meta encrypts the payload with your public key.\n// Here we pass through assuming your n8n is running behind TLS\n// and you have decryption middleware, OR you bypass encryption in\n// WhatsApp Manager (Developer Mode toggle).\n\n// Support Meta's GET health check\nif ($input.first().json.method === 'GET' || body?.['hub.mode'] === 'subscribe') {\n  return [{\n    json: {\n      _type: 'HEALTH_CHECK',\n      challenge: body?.['hub.challenge'] || ''\n    }\n  }];\n}\n\n// Parse the decrypted body\nlet payload;\ntry {\n  payload = typeof body === 'string' ? JSON.parse(body) : body;\n} catch(e) {\n  payload = body;\n}\n\nconst action = payload?.action || '';\nconst screenData = payload?.data || {};\nconst flowToken = payload?.flow_token || '';\n\n// Detect health check via action field\nif (action === 'ping') {\n  return [{ json: { _type: 'HEALTH_CHECK', challenge: payload.challenge || '' } }];\n}\n\n// Full form submission — action is INIT on terminal screen completion\n// or it comes through as a completed flow webhook notification\nreturn [{\n  json: {\n    _type: 'FORM_SUBMISSION',\n    flow_token: flowToken,\n    action: action,\n    // Personal\n    full_name:              screenData.full_name || '',\n    id_number:              screenData.id_number || '',\n    cell_phone:             screenData.cell_phone || '',\n    email:                  screenData.email || '',\n    marital_status:         screenData.marital_status || '',\n    date_married:           screenData.date_married || '',\n    // Address\n    home_address:           screenData.home_address || '',\n    period_at_address:      screenData.period_at_address || '',\n    accommodation_type:     screenData.accommodation_type || '',\n    kin_full_name:          screenData.kin_full_name || '',\n    kin_address:            screenData.kin_address || '',\n    kin_contact_number:     screenData.kin_contact_number || '',\n    // Employment\n    employer_name:          screenData.employer_name || '',\n    employer_address:       screenData.employer_address || '',\n    period_at_employer:     screenData.period_at_employer || '',\n    work_telephone:         screenData.work_telephone || '',\n    // Financial\n    salary_gross:           screenData.salary_gross || '',\n    salary_net:             screenData.salary_net || '',\n    expense_bond_rent:      screenData.expense_bond_rent || '',\n    expense_car:            screenData.expense_car || '',\n    expense_loans:          screenData.expense_loans || '',\n    expense_cellphone:      screenData.expense_cellphone || '',\n    expense_policies:       screenData.expense_policies || '',\n    expense_food_entertainment: screenData.expense_food_entertainment || '',\n    expense_credit_card:    screenData.expense_credit_card || '',\n    expense_furniture:      screenData.expense_furniture || '',\n    bank_name:              screenData.bank_name || '',\n    bank_account_number:    screenData.bank_account_number || '',\n    account_type:           screenData.account_type || '',\n    // Documents — array of media IDs returned by WhatsApp\n    all_documents:          screenData.all_documents || [],\n    consent:                screenData.consent || false,\n    // Raw for debug\n    _raw: payload\n  }\n}];\n"
+      },
+      "id": "node_parse_payload",
+      "name": "Parse & Decrypt Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check_health",
+              "leftValue": "={{ $json._type }}",
+              "rightValue": "HEALTH_CHECK",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_is_health_check",
+      "name": "Health Check?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ challenge: $json.challenge }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_health",
+      "name": "Respond — Health OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// Validate required form fields before processing documents\n// ─────────────────────────────────────────────────────────────────\nconst d = $input.first().json;\n\nconst required = [\n  ['full_name',          'Full Name'],\n  ['id_number',          'Identity Number'],\n  ['cell_phone',         'Cell Phone'],\n  ['home_address',       'Home Address'],\n  ['employer_name',      'Employer Name'],\n  ['salary_gross',       'Gross Salary'],\n  ['salary_net',         'Net Salary'],\n  ['bank_name',          'Bank Name'],\n  ['bank_account_number','Account Number'],\n];\n\nconst missing = required\n  .filter(([field]) => !d[field] || String(d[field]).trim() === '')\n  .map(([, label]) => label);\n\n// Validate SA ID number (13 digits)\nconst idValid = /^\\d{13}$/.test(String(d.id_number || ''));\nif (!idValid) missing.push('Valid 13-digit Identity Number');\n\n// Validate consent\nif (!d.consent) missing.push('Consent confirmation');\n\n// Validate at least 5 documents uploaded\nconst docs = Array.isArray(d.all_documents) ? d.all_documents : [];\nconst docCount = docs.length;\n\nreturn [{\n  json: {\n    ...d,\n    _validation_passed: missing.length === 0 && docCount >= 5,\n    _validation_errors: missing,\n    _doc_count: docCount,\n    _docs: docs\n  }\n}];\n"
+      },
+      "id": "node_validate_fields",
+      "name": "Validate Form Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check_valid",
+              "leftValue": "={{ $json._validation_passed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_validation_gate",
+      "name": "Validation Passed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        960,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  screen: \"DOCUMENTS_UPLOAD\",\n  data: {\n    error_message: \"⚠️ Missing required fields: \" + $json._validation_errors.join(', ') + \". Please go back and complete all fields.\"\n  }\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_validation_fail",
+      "name": "Respond — Validation Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// Download each document from Meta's Graph API using its media ID\n// Requires: WHATSAPP_API_TOKEN set in n8n credentials/env\n// ─────────────────────────────────────────────────────────────────\nconst docs = $json._docs || [];\nconst token = $env.WHATSAPP_API_TOKEN || '';\n\nconst downloadTasks = docs.map((mediaId, index) => ({\n  json: {\n    media_id: mediaId,\n    index: index,\n    token: token,\n    // Carry forward applicant data\n    _applicant_data: {\n      full_name:          $json.full_name,\n      id_number:          $json.id_number,\n      cell_phone:         $json.cell_phone,\n      email:              $json.email,\n      marital_status:     $json.marital_status,\n      date_married:       $json.date_married,\n      home_address:       $json.home_address,\n      period_at_address:  $json.period_at_address,\n      accommodation_type: $json.accommodation_type,\n      kin_full_name:      $json.kin_full_name,\n      kin_address:        $json.kin_address,\n      kin_contact_number: $json.kin_contact_number,\n      employer_name:      $json.employer_name,\n      employer_address:   $json.employer_address,\n      period_at_employer: $json.period_at_employer,\n      work_telephone:     $json.work_telephone,\n      salary_gross:       $json.salary_gross,\n      salary_net:         $json.salary_net,\n      expense_bond_rent:  $json.expense_bond_rent,\n      expense_car:        $json.expense_car,\n      expense_loans:      $json.expense_loans,\n      expense_cellphone:  $json.expense_cellphone,\n      expense_policies:   $json.expense_policies,\n      expense_food_entertainment: $json.expense_food_entertainment,\n      expense_credit_card: $json.expense_credit_card,\n      expense_furniture:  $json.expense_furniture,\n      bank_name:          $json.bank_name,\n      bank_account_number: $json.bank_account_number,\n      account_type:       $json.account_type,\n      flow_token:         $json.flow_token\n    }\n  }\n}));\n\nreturn downloadTasks;\n"
+      },
+      "id": "node_prepare_downloads",
+      "name": "Prepare Document Downloads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.media_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_get_media_url",
+      "name": "Get Media Download URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Prepare Document Downloads').item.json.token }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "node_download_media",
+      "name": "Download Document File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// Prepare the image for OpenAI Vision analysis\n// Convert binary to base64 and build the prompt\n// ────────────────────────────────────────────────────────────────\nconst binaryData = $input.first().binary;\nconst binaryKey = Object.keys(binaryData || {})[0] || 'data';\nconst mimeType = binaryData?.[binaryKey]?.mimeType || 'image/jpeg';\n\n// Only run vision check on images (PDFs are skipped with auto-pass)\nconst isImage = mimeType.startsWith('image/');\n\nconst prepData = $('Prepare Document Downloads').item.json;\n\nreturn [{\n  json: {\n    is_image: isImage,\n    mime_type: mimeType,\n    binary_key: binaryKey,\n    media_id: prepData.media_id,\n    doc_index: prepData.index,\n    prompt: `Analyze this image for a finance application document.\n\n1. QUALITY: Is the image clear, legible, well-lit, not severely tilted, and completely capturing the document?\n2. TYPE: Identify the document type (e.g., ID Document, Driver's License, Payslip, Bank Statement, Proof of Residence).\n3. DATA EXTRACTION: Extract the key, structured data visible on the document.\n\nReturn ONLY a strict JSON object mapping to this schema:\n{\n  \"passed\": boolean,\n  \"quality_score\": \"good\" | \"acceptable\" | \"poor\",\n  \"issues\": [\"blurry\", \"cut-off\", \"glare\"], // empty if passed is true\n  \"document_type_detected\": \"string limit 30 chars\",\n  \"user_message\": \"string explaining what is wrong to the user for them to retake it\",\n  \"extracted_data\": {\n    // Provide key-value pairs of the most critical OCR data extracted\n    // Examples: \"id_number\": \"...\", \"full_name\": \"...\", \"address\": \"...\", \"net_pay\": \"...\", \"transaction_dates\": \"...\"\n  }\n}`,\n    _applicant_data: prepData._applicant_data\n  },\n  binary: binaryData\n}];\n"
+      },
+      "id": "node_prep_vision",
+      "name": "Prepare for Vision Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "is_image",
+              "leftValue": "={{ $json.is_image }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_is_image_check",
+      "name": "Is Image File?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// PDF documents auto-pass image quality check\nreturn [{\n  json: {\n    ...$json,\n    vision_passed: true,\n    vision_reason: 'PDF document — auto-approved',\n    quality_score: 'N/A',\n    extracted_data: { \"info\": \"Data extraction bypassed for PDFs in this flow version.\" }\n  },\n  binary: $input.first().binary\n}];\n"
+      },
+      "id": "node_pdf_auto_pass",
+      "name": "PDF — Auto Pass",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "messages": [
+          {
+            "content": "={{ $json.prompt }}"
+          }
+        ],
+        "image": "={{ $('Prepare for Vision Check').item.binary[$('Prepare for Vision Check').item.json.binary_key].data }}"
+      },
+      "id": "node_openai_vision",
+      "name": "OpenAI Vision — Quality Check & Extract",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2400,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// Merge vision result with document metadata\n// ─────────────────────────────────────────────────────────────────\nconst visionResult = $input.first().json?.message?.content || $input.first().json;\nlet parsed;\ntry {\n  parsed = typeof visionResult === 'string' ? JSON.parse(visionResult) : visionResult;\n} catch(e) {\n  parsed = { passed: true, quality_score: 'acceptable', issues: [], user_message: '', extracted_data: {} };\n}\n\nconst prepData = $('Prepare for Vision Check').item.json;\n\nreturn [{\n  json: {\n    media_id:             prepData.media_id,\n    doc_index:            prepData.doc_index,\n    vision_passed:        parsed.passed === true,\n    quality_score:        parsed.quality_score || 'unknown',\n    issues:               parsed.issues || [],\n    document_type:        parsed.document_type_detected || 'unknown',\n    user_message:         parsed.user_message || '',\n    extracted_data:       parsed.extracted_data || {},\n    _applicant_data:      prepData._applicant_data\n  }\n}];\n"
+      },
+      "id": "node_parse_vision",
+      "name": "Parse Vision Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "node_merge_results",
+      "name": "Merge All Doc Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2880,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// Aggregate all vision results — determine overall pass/fail\n// ─────────────────────────────────────────────────────────────────\nconst items = $input.all();\n\nconst failedDocs = items.filter(item => item.json.vision_passed === false);\nconst allPassed = failedDocs.length === 0;\n\n// Collect all failed messages\nconst failMessages = failedDocs\n  .map((item, i) => {\n    const msg = item.json.user_message || 'Document quality too low';\n    const type = item.json.document_type || `Document ${item.json.doc_index + 1}`;\n    return `• ${type}: ${msg}`;\n  })\n  .join('\\n');\n\n// Format extracted data for the email template\nconst extractedTextEmail = items.map(item => {\n  const dataLines = Object.entries(item.json.extracted_data || {})\n    .map(([k, v]) => `  - ${k}: ${v}`)\n    .join('\\n');\n  return `**${item.json.document_type || 'Unknown Doc'}**:\\n${dataLines || '  No data extracted.'}`;\n}).join('\\n\\n');\n\n// Carry applicant data from first item\nconst applicantData = items[0]?.json?._applicant_data || {};\n\nreturn [{\n  json: {\n    all_passed: allPassed,\n    failed_count: failedDocs.length,\n    fail_messages: failMessages,\n    extracted_text_email: extractedTextEmail,\n    all_results: items.map(i => i.json),\n    _applicant_data: applicantData\n  }\n}];\n"
+      },
+      "id": "node_aggregate_results",
+      "name": "Aggregate Vision Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "all_passed",
+              "leftValue": "={{ $json.all_passed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node_docs_pass_gate",
+      "name": "All Documents Clear?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  screen: \"DOCUMENTS_UPLOAD\",\n  data: {\n    error_message: \"📸 Some documents need to be re-uploaded:\\n\\n\" + $json.fail_messages + \"\\n\\nPlease upload clearer photos and try again.\"\n  }\n}) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_doc_fail",
+      "name": "Respond — Docs Failed (Re-upload)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ─────────────────────────────────────────────────────────────────\n// All checks passed — format final application record\n// ─────────────────────────────────────────────────────────────────\nconst d = $json._applicant_data;\nconst now = new Date().toISOString();\n\nreturn [{\n  json: {\n    submitted_at: now,\n    status: 'PENDING_REVIEW',\n    // Personal\n    full_name:          d.full_name,\n    id_number:          d.id_number,\n    cell_phone:         d.cell_phone,\n    email:              d.email,\n    marital_status:     d.marital_status,\n    date_married:       d.date_married,\n    // Address\n    home_address:       d.home_address,\n    period_at_address:  d.period_at_address,\n    accommodation_type: d.accommodation_type,\n    kin_full_name:      d.kin_full_name,\n    kin_address:        d.kin_address,\n    kin_contact_number: d.kin_contact_number,\n    // Employment\n    employer_name:      d.employer_name,\n    employer_address:   d.employer_address,\n    period_at_employer: d.period_at_employer,\n    work_telephone:     d.work_telephone,\n    // Financial\n    salary_gross:       d.salary_gross,\n    salary_net:         d.salary_net,\n    expenses: {\n      bond_rent:          d.expense_bond_rent,\n      car:                d.expense_car,\n      loans:              d.expense_loans,\n      cellphone:          d.expense_cellphone,\n      policies:           d.expense_policies,\n      food_entertainment: d.expense_food_entertainment,\n      credit_card:        d.expense_credit_card,\n      furniture:          d.expense_furniture\n    },\n    bank_name:          d.bank_name,\n    bank_account_number: d.bank_account_number,\n    account_type:       d.account_type,\n    flow_token:         d.flow_token,\n    extracted_text_email: $json.extracted_text_email,\n    document_results:   $json.all_results\n  }\n}];\n"
+      },
+      "id": "node_format_application",
+      "name": "Format Application Record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ screen: \"SUCCESS\", data: {} }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "node_respond_success",
+      "name": "Respond — Flow Complete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3840,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "YOUR_GOOGLE_SHEET_ID_HERE"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Applications"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": []
+        },
+        "options": {}
+      },
+      "id": "node_save_sheet",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3840,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@yourfinancecompany.co.za",
+        "toEmail": "=applications@yourfinancecompany.co.za",
+        "subject": "=🆕 New Finance Application — {{ $json.full_name }}",
+        "html": "=<h2>Application from {{ $json.full_name }}</h2>\n<ul>\n<li><strong>ID Number:</strong> {{ $json.id_number }}</li>\n<li><strong>Phone:</strong> {{ $json.cell_phone }}</li>\n<li><strong>Gross Salary:</strong> R{{ $json.salary_gross }}</li>\n</ul>\n\n<h3>AI Document Extraction Results</h3>\n<pre>{{ $json.extracted_text_email }}</pre>\n\n<p>Please review the attached documents from the n8n filesystem for full details.</p>",
+        "options": {}
+      },
+      "id": "node_send_email",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3840,
+        448
+      ],
+      "webhookId": "29c8ee93-10b5-4c9d-9dc0-371f381506db"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $json._applicant_data?.cell_phone || '' }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "node_whatsapp_confirm",
+      "name": "Send WhatsApp Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        592
+      ]
+    }
+  ],
+  "connections": {
+    "WhatsApp Flow Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse & Decrypt Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Decrypt Payload": {
+      "main": [
+        [
+          {
+            "node": "Health Check?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health Check?": {
+      "main": [
+        [
+          {
+            "node": "Respond — Health OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Form Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Form Fields": {
+      "main": [
+        [
+          {
+            "node": "Validation Passed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Passed?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Document Downloads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond — Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Document Downloads": {
+      "main": [
+        [
+          {
+            "node": "Get Media Download URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Media Download URL": {
+      "main": [
+        [
+          {
+            "node": "Download Document File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Document File": {
+      "main": [
+        [
+          {
+            "node": "Prepare for Vision Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare for Vision Check": {
+      "main": [
+        [
+          {
+            "node": "Is Image File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Image File?": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Vision — Quality Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PDF — Auto Pass",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Vision — Quality Check & Extract": {
+      "main": [
+        [
+          {
+            "node": "Parse Vision Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Vision Result": {
+      "main": [
+        [
+          {
+            "node": "Merge All Doc Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDF — Auto Pass": {
+      "main": [
+        [
+          {
+            "node": "Merge All Doc Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Doc Results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Vision Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Vision Results": {
+      "main": [
+        [
+          {
+            "node": "All Documents Clear?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "All Documents Clear?": {
+      "main": [
+        [
+          {
+            "node": "Format Application Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond — Docs Failed (Re-upload)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Application Record": {
+      "main": [
+        [
+          {
+            "node": "Respond — Flow Complete",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d4ba9192-515c-4a4a-8111-9a1bd1a6cf7b",
+  "activeVersionId": null,
+  "versionCounter": 12,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T08:37:42.502Z",
+      "createdAt": "2026-03-05T08:37:42.502Z",
+      "role": "workflow:owner",
+      "workflowId": "K29U3BoeeU84aiki",
+      "projectId": "pDpkMhqHd9AsGCQZ",
+      "project": {
+        "updatedAt": "2026-02-19T08:44:15.532Z",
+        "createdAt": "2026-02-19T08:42:49.402Z",
+        "id": "pDpkMhqHd9AsGCQZ",
+        "name": "Kyle Rebeiro <insightful.projects777@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "99de3673-3ed8-4b97-a488-c3cc4fb0644d"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-03-05T11:44:03.922Z",
+      "createdAt": "2026-03-05T11:44:03.922Z",
+      "id": "FjFRlKOjwOHRF8Sz",
+      "name": "Finance"
+    },
+    {
+      "updatedAt": "2026-03-05T11:44:04.351Z",
+      "createdAt": "2026-03-05T11:44:04.351Z",
+      "id": "TuscdQ60l3KQpw2I",
+      "name": "MOCK TEST"
+    },
+    {
+      "updatedAt": "2026-03-05T11:44:03.940Z",
+      "createdAt": "2026-03-05T11:44:03.940Z",
+      "id": "oz9so6tdiyieWR49",
+      "name": "WhatsApp"
+    }
+  ],
+  "activeVersion": null
+}

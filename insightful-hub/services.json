@@ -1,0 +1,19 @@
+[
+  {"name":"Vue","group":"applications","url":"https://vue.insightful-projects.com","health":"http://vue-app:3000/"},
+  {"name":"API","group":"infrastructure","url":"https://api.insightful-projects.com","health":"http://api-nest:4001/health"},
+  {"name":"Redis","group":"infrastructure","url":"http://localhost:6379","health":"redis://insightful-redis:6379/0"},
+  {"name":"Loki","group":"infrastructure","url":"http://localhost:3100","health":"http://insightful-loki:3100/ready"},
+  {"name":"Grafana","group":"infrastructure","url":"http://localhost:3000","health":"http://insightful-grafana:3000/api/health"},
+  {"name":"CloudBeaver","group":"infrastructure","url":"http://localhost:8978","health":"http://lifeos-cloudbeaver:8978/"},
+  {"name":"codeSpace Java","group":"infrastructure","url":"","health":"http://codespace-java:7500/api/codex/logs"},
+  {"name":"n8n","group":"automation","url":"https://n8n.insightful-projects.com","health":"http://n8n:5678/healthz"},
+  {"name":"ntfy","group":"automation","url":"http://localhost:8091","health":"http://odysseus-ntfy:80/"},
+  {"name":"Odysseus","group":"ai","url":"https://odysseus.insightful-projects.com","health":"http://odysseus:7000/"},
+  {"name":"Ollama","group":"ai","url":"http://localhost:11434","health":"http://insightful-ollama:11434/api/tags"},
+  {"name":"ChromaDB","group":"ai","url":"http://localhost:8100","health":"http://odysseus-chromadb:8000/api/v2/heartbeat"},
+  {"name":"SearXNG","group":"ai","url":"http://localhost:8080","health":"http://odysseus-searxng:8080/"},
+  {"name":"Qdrant","group":"infrastructure","url":"http://localhost:6333","health":"http://insightful-mem0-qdrant:6333/"},
+  {"name":"code-server","group":"infrastructure","url":"http://localhost:8081","health":"http://insightful-code-server:8080/healthz"},
+  {"name":"NPM","group":"infrastructure","url":"https://npm.insightful-projects.com","health":"http://npm:81/"},
+  {"name":"Hub","group":"infrastructure","url":"http://hub.insightful-projects.com","health":"http://localhost:80/"}
+]

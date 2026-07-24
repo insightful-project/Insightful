@@ -1,0 +1,51 @@
+# Insightful — CloudBeaver database GUI
+# Shared by Life OS, codeSpace, and any other Postgres stack.
+# Starts on port 8978, workspace persisted in data/lifeos/cloudbeaver/.
+#
+# Usage: podman compose -f compose/cloudbeaver.yml up -d
+
+name: cloudbeaver
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  cloudbeaver:
+    image: docker.io/dbeaver/cloudbeaver:22.0.0
+    container_name: lifeos-cloudbeaver
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "127.0.0.1:${CB_PORT:-8978}:8978"
+    volumes:
+      - type: bind
+        source: ./../data/lifeos/cloudbeaver
+        target: /opt/cloudbeaver/workspace
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8978"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

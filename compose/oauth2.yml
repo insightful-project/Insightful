@@ -1,0 +1,297 @@
+# Insightful — OAuth2 Proxy sidecars (Google SSO)
+# One sidecar per protected service. NPM proxies to sidecar:4180 instead of directly to service.
+# Access tiers: strict (email allowlist) and domain (@insightful-projects.com).
+#
+# Usage: podman compose -f compose/oauth2.yml up -d
+# Prerequisites:
+#   1. Google Cloud OAuth 2.0 credentials (set OAUTH2_GOOGLE_CLIENT_ID/SECRET in .env)
+#   2. Cookie secret: python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+#   3. NPM proxy hosts updated to forward to sidecars (run bin/npm-oauth-setup.sh)
+
+name: oauth2
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  # ── Strict Tier (email allowlist only) ────────────────────────
+  # Access restricted to specific emails via authenticated-emails-file.
+  # No --email-domain set — the file is the sole authorization criteria.
+
+  oauth-n8n:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-n8n
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://n8n:5678
+      OAUTH2_PROXY_REDIRECT_URL: https://n8n.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/n8n
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  oauth-codeserver:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-codeserver
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://insightful-code-server:8080
+      OAUTH2_PROXY_REDIRECT_URL: https://code.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/codeserver
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  oauth-odysseus:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-odysseus
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://odysseus:7000
+      OAUTH2_PROXY_REDIRECT_URL: https://odysseus.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/odysseus
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  oauth-cloudbeaver:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-cloudbeaver
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://lifeos-cloudbeaver:8978
+      OAUTH2_PROXY_REDIRECT_URL: https://cloudbeaver.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/cloudbeaver
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Domain Tier (@insightful-projects.com + admin email) ──────
+  # Any @insightful-projects.com user is allowed.
+  # Additional admin emails (gmail) added via authenticated-emails-file.
+
+  oauth-grafana:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-grafana
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://insightful-grafana:3000
+      OAUTH2_PROXY_REDIRECT_URL: https://grafana.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_EMAIL_DOMAINS: insightful-projects.com
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/grafana
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  oauth-hub:
+    image: docker.io/oauth2-proxy/oauth2-proxy:v7.8.1
+    container_name: oauth-hub
+    restart: unless-stopped
+    stop_grace_period: 15s
+    env_file: .env
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_GOOGLE_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_COOKIE_SECRET}
+      OAUTH2_PROXY_COOKIE_SECURE: ${OAUTH2_COOKIE_SECURE:-false}
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_UPSTREAMS: http://insightful-hub:80
+      OAUTH2_PROXY_REDIRECT_URL: https://hub.insightful-projects.com/oauth2/callback
+      OAUTH2_PROXY_PROVIDER: google
+      OAUTH2_PROXY_EMAIL_DOMAINS: insightful-projects.com
+      OAUTH2_PROXY_REVERSE_PROXY: "true"
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_CUSTOM_SIGN_IN_PAGE: /404.html
+      OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE: /etc/oauth2-allowlist/hub
+    volumes:
+      - ./../data/oauth2/allowlist:/etc/oauth2-allowlist:ro
+      - ./../data/oauth2/404.html:/404.html:ro
+    cap_drop:
+      - ALL
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID, NET_BIND_SERVICE]
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "-O-", "http://localhost:4180/ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 64M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

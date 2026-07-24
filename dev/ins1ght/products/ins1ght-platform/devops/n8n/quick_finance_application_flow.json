@@ -1,0 +1,918 @@
+{
+    "version": "7.1",
+    "screens": [
+        {
+            "id": "WELCOME",
+            "title": "Quick Finance Application",
+            "terminal": false,
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Quick Finance Application"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Please complete this application and ensure you have the following documents ready to upload:\n\n• Clear copy of valid ID\n• Clear copy of valid Driver's Licence\n• 3 months payslips\n• 3 months bank statements\n• Proof of residence\n\nThis form will take approximately 5–10 minutes to complete."
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "All information provided is kept strictly confidential and used solely for the purpose of assessing your finance application."
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Start Application",
+                        "on-click-action": {
+                            "name": "navigate",
+                            "next": {
+                                "type": "screen",
+                                "name": "PERSONAL_INFO"
+                            },
+                            "payload": {}
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "PERSONAL_INFO",
+            "title": "Personal Information",
+            "terminal": false,
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Personal Information"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Section 1 of 5 — Tell us about yourself"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "personal_info_form",
+                        "children": [
+                            {
+                                "type": "TextInput",
+                                "label": "Full Name (per ID)",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "full_name",
+                                "helper-text": "Enter your name exactly as it appears on your ID document",
+                                "min-chars": 2,
+                                "max-chars": 80
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Identity Number",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "id_number",
+                                "helper-text": "13-digit South African ID number",
+                                "min-chars": 13,
+                                "max-chars": 13
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Cell Phone Number",
+                                "input-type": "phone",
+                                "required": true,
+                                "name": "cell_phone",
+                                "helper-text": "e.g. 0821234567"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Email Address",
+                                "input-type": "email",
+                                "required": false,
+                                "name": "email",
+                                "helper-text": "Optional — enter your email address if available"
+                            },
+                            {
+                                "type": "RadioButtonsGroup",
+                                "label": "Marital Status",
+                                "required": true,
+                                "name": "marital_status",
+                                "data-source": [
+                                    {
+                                        "id": "single",
+                                        "title": "Single"
+                                    },
+                                    {
+                                        "id": "married_in_cop",
+                                        "title": "Married (In COP)"
+                                    },
+                                    {
+                                        "id": "married_out_cop",
+                                        "title": "Married (Out of COP)"
+                                    },
+                                    {
+                                        "id": "divorced",
+                                        "title": "Divorced"
+                                    },
+                                    {
+                                        "id": "widowed",
+                                        "title": "Widowed"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Date Married",
+                                "input-type": "text",
+                                "required": false,
+                                "name": "date_married",
+                                "helper-text": "If married — enter date (DD/MM/YYYY)"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "navigate",
+                            "next": {
+                                "type": "screen",
+                                "name": "ADDRESS_INFO"
+                            },
+                            "payload": {
+                                "full_name": "${form.full_name}",
+                                "id_number": "${form.id_number}",
+                                "cell_phone": "${form.cell_phone}",
+                                "email": "${form.email}",
+                                "marital_status": "${form.marital_status}",
+                                "date_married": "${form.date_married}"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "ADDRESS_INFO",
+            "title": "Address & Residence",
+            "terminal": false,
+            "data": {
+                "full_name": {
+                    "type": "string",
+                    "__example__": "John Doe"
+                },
+                "id_number": {
+                    "type": "string",
+                    "__example__": "0000000000000"
+                },
+                "cell_phone": {
+                    "type": "string",
+                    "__example__": "0821234567"
+                },
+                "email": {
+                    "type": "string",
+                    "__example__": "john@example.com"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "__example__": "single"
+                },
+                "date_married": {
+                    "type": "string",
+                    "__example__": ""
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Address & Residence"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Section 2 of 5 — Where do you live?"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "address_form",
+                        "children": [
+                            {
+                                "type": "TextArea",
+                                "label": "Home Address",
+                                "required": true,
+                                "name": "home_address",
+                                "helper-text": "Enter your full street address including suburb and city",
+                                "max-length": 200
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Period at Address",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "period_at_address",
+                                "helper-text": "e.g. 2 years 3 months"
+                            },
+                            {
+                                "type": "RadioButtonsGroup",
+                                "label": "Accommodation Type",
+                                "required": true,
+                                "name": "accommodation_type",
+                                "data-source": [
+                                    {
+                                        "id": "bonded",
+                                        "title": "Bonded (Home Loan)"
+                                    },
+                                    {
+                                        "id": "renting",
+                                        "title": "Renting"
+                                    },
+                                    {
+                                        "id": "own_no_bond",
+                                        "title": "Owned — No Bond"
+                                    },
+                                    {
+                                        "id": "living_with_family",
+                                        "title": "Living with Family / Other"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Next of Kin Name",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "kin_full_name",
+                                "helper-text": "Name & surname of someone you are NOT living with"
+                            },
+                            {
+                                "type": "TextArea",
+                                "label": "Next of Kin Address",
+                                "required": true,
+                                "name": "kin_address",
+                                "helper-text": "Full home address of your next of kin",
+                                "max-length": 200
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Next of Kin Contact",
+                                "input-type": "phone",
+                                "required": true,
+                                "name": "kin_contact_number",
+                                "helper-text": "e.g. 0821234567"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "navigate",
+                            "next": {
+                                "type": "screen",
+                                "name": "EMPLOYMENT_INFO"
+                            },
+                            "payload": {
+                                "full_name": "${data.full_name}",
+                                "id_number": "${data.id_number}",
+                                "cell_phone": "${data.cell_phone}",
+                                "email": "${data.email}",
+                                "marital_status": "${data.marital_status}",
+                                "date_married": "${data.date_married}",
+                                "home_address": "${form.home_address}",
+                                "period_at_address": "${form.period_at_address}",
+                                "accommodation_type": "${form.accommodation_type}",
+                                "kin_full_name": "${form.kin_full_name}",
+                                "kin_address": "${form.kin_address}",
+                                "kin_contact_number": "${form.kin_contact_number}"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "EMPLOYMENT_INFO",
+            "title": "Employment Details",
+            "terminal": false,
+            "data": {
+                "full_name": {
+                    "type": "string",
+                    "__example__": "John Doe"
+                },
+                "id_number": {
+                    "type": "string",
+                    "__example__": "0000000000000"
+                },
+                "cell_phone": {
+                    "type": "string",
+                    "__example__": "0821234567"
+                },
+                "email": {
+                    "type": "string",
+                    "__example__": "john@example.com"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "__example__": "single"
+                },
+                "date_married": {
+                    "type": "string",
+                    "__example__": ""
+                },
+                "home_address": {
+                    "type": "string",
+                    "__example__": "123 Main Street, Johannesburg"
+                },
+                "period_at_address": {
+                    "type": "string",
+                    "__example__": "2 years"
+                },
+                "accommodation_type": {
+                    "type": "string",
+                    "__example__": "renting"
+                },
+                "kin_full_name": {
+                    "type": "string",
+                    "__example__": "Jane Doe"
+                },
+                "kin_address": {
+                    "type": "string",
+                    "__example__": "456 Other Street"
+                },
+                "kin_contact_number": {
+                    "type": "string",
+                    "__example__": "0831234567"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Employment Details"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Section 3 of 5 — Where do you work?"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "employment_form",
+                        "children": [
+                            {
+                                "type": "TextInput",
+                                "label": "Employer Name",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "employer_name",
+                                "helper-text": "Full name of your current employer / company"
+                            },
+                            {
+                                "type": "TextArea",
+                                "label": "Employer Address",
+                                "required": true,
+                                "name": "employer_address",
+                                "helper-text": "Full address of your workplace",
+                                "max-length": 200
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Period at Employer",
+                                "input-type": "text",
+                                "required": true,
+                                "name": "period_at_employer",
+                                "helper-text": "e.g. 3 years 6 months"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Work Telephone",
+                                "input-type": "phone",
+                                "required": false,
+                                "name": "work_telephone",
+                                "helper-text": "Office landline number (if available)"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "navigate",
+                            "next": {
+                                "type": "screen",
+                                "name": "FINANCIAL_INFO"
+                            },
+                            "payload": {
+                                "full_name": "${data.full_name}",
+                                "id_number": "${data.id_number}",
+                                "cell_phone": "${data.cell_phone}",
+                                "email": "${data.email}",
+                                "marital_status": "${data.marital_status}",
+                                "date_married": "${data.date_married}",
+                                "home_address": "${data.home_address}",
+                                "period_at_address": "${data.period_at_address}",
+                                "accommodation_type": "${data.accommodation_type}",
+                                "kin_full_name": "${data.kin_full_name}",
+                                "kin_address": "${data.kin_address}",
+                                "kin_contact_number": "${data.kin_contact_number}",
+                                "employer_name": "${form.employer_name}",
+                                "employer_address": "${form.employer_address}",
+                                "period_at_employer": "${form.period_at_employer}",
+                                "work_telephone": "${form.work_telephone}"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "FINANCIAL_INFO",
+            "title": "Financial Information",
+            "terminal": false,
+            "data": {
+                "full_name": {
+                    "type": "string",
+                    "__example__": "John Doe"
+                },
+                "id_number": {
+                    "type": "string",
+                    "__example__": "0000000000000"
+                },
+                "cell_phone": {
+                    "type": "string",
+                    "__example__": "0821234567"
+                },
+                "email": {
+                    "type": "string",
+                    "__example__": "john@example.com"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "__example__": "single"
+                },
+                "date_married": {
+                    "type": "string",
+                    "__example__": ""
+                },
+                "home_address": {
+                    "type": "string",
+                    "__example__": "123 Main Street"
+                },
+                "period_at_address": {
+                    "type": "string",
+                    "__example__": "2 years"
+                },
+                "accommodation_type": {
+                    "type": "string",
+                    "__example__": "renting"
+                },
+                "kin_full_name": {
+                    "type": "string",
+                    "__example__": "Jane Doe"
+                },
+                "kin_address": {
+                    "type": "string",
+                    "__example__": "456 Other Street"
+                },
+                "kin_contact_number": {
+                    "type": "string",
+                    "__example__": "0831234567"
+                },
+                "employer_name": {
+                    "type": "string",
+                    "__example__": "ABC Company"
+                },
+                "employer_address": {
+                    "type": "string",
+                    "__example__": "789 Work Street"
+                },
+                "period_at_employer": {
+                    "type": "string",
+                    "__example__": "3 years"
+                },
+                "work_telephone": {
+                    "type": "string",
+                    "__example__": "0111234567"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Financial Information"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Section 4 of 5 — Income, expenses & banking"
+                    },
+                    {
+                        "type": "Form",
+                        "name": "financial_form",
+                        "children": [
+                            {
+                                "type": "TextInput",
+                                "label": "Gross Salary",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "salary_gross",
+                                "helper-text": "Enter amount in Rands, e.g. 25000"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Net Salary",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "salary_net",
+                                "helper-text": "Enter amount in Rands, e.g. 18000"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Bond / Rent",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_bond_rent",
+                                "helper-text": "Monthly bond or rent payment in Rands (enter 0 if not applicable)"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Car Installments",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_car",
+                                "helper-text": "Total monthly car installment(s) in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Loans",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_loans",
+                                "helper-text": "Total monthly loan repayment(s) in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Cell Phone Contract",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_cellphone",
+                                "helper-text": "Monthly cell phone contract payment in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Policies / Insurance",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_policies",
+                                "helper-text": "Total monthly policies / insurance in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Food & Entertainment",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_food_entertainment",
+                                "helper-text": "Estimated monthly food & entertainment spend in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Credit Card",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_credit_card",
+                                "helper-text": "Monthly credit card repayment in Rands"
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Furniture Account",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "expense_furniture",
+                                "helper-text": "Monthly furniture account payment in Rands"
+                            },
+                            {
+                                "type": "Dropdown",
+                                "label": "Bank Name",
+                                "required": true,
+                                "name": "bank_name",
+                                "data-source": [
+                                    {
+                                        "id": "absa",
+                                        "title": "ABSA"
+                                    },
+                                    {
+                                        "id": "fnb",
+                                        "title": "FNB (First National Bank)"
+                                    },
+                                    {
+                                        "id": "standard_bank",
+                                        "title": "Standard Bank"
+                                    },
+                                    {
+                                        "id": "nedbank",
+                                        "title": "Nedbank"
+                                    },
+                                    {
+                                        "id": "capitec",
+                                        "title": "Capitec Bank"
+                                    },
+                                    {
+                                        "id": "discovery",
+                                        "title": "Discovery Bank"
+                                    },
+                                    {
+                                        "id": "african_bank",
+                                        "title": "African Bank"
+                                    },
+                                    {
+                                        "id": "tyme_bank",
+                                        "title": "TymeBank"
+                                    },
+                                    {
+                                        "id": "bidvest",
+                                        "title": "Bidvest Bank"
+                                    },
+                                    {
+                                        "id": "other",
+                                        "title": "Other"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TextInput",
+                                "label": "Account Number",
+                                "input-type": "number",
+                                "required": true,
+                                "name": "bank_account_number",
+                                "helper-text": "Your bank account number"
+                            },
+                            {
+                                "type": "RadioButtonsGroup",
+                                "label": "Account Type",
+                                "required": true,
+                                "name": "account_type",
+                                "data-source": [
+                                    {
+                                        "id": "cheque",
+                                        "title": "Cheque Account"
+                                    },
+                                    {
+                                        "id": "savings",
+                                        "title": "Savings Account"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Continue",
+                        "on-click-action": {
+                            "name": "navigate",
+                            "next": {
+                                "type": "screen",
+                                "name": "DOCUMENTS_UPLOAD"
+                            },
+                            "payload": {
+                                "full_name": "${data.full_name}",
+                                "id_number": "${data.id_number}",
+                                "cell_phone": "${data.cell_phone}",
+                                "email": "${data.email}",
+                                "marital_status": "${data.marital_status}",
+                                "date_married": "${data.date_married}",
+                                "home_address": "${data.home_address}",
+                                "period_at_address": "${data.period_at_address}",
+                                "accommodation_type": "${data.accommodation_type}",
+                                "kin_full_name": "${data.kin_full_name}",
+                                "kin_address": "${data.kin_address}",
+                                "kin_contact_number": "${data.kin_contact_number}",
+                                "employer_name": "${data.employer_name}",
+                                "employer_address": "${data.employer_address}",
+                                "period_at_employer": "${data.period_at_employer}",
+                                "work_telephone": "${data.work_telephone}",
+                                "salary_gross": "${form.salary_gross}",
+                                "salary_net": "${form.salary_net}",
+                                "expense_bond_rent": "${form.expense_bond_rent}",
+                                "expense_car": "${form.expense_car}",
+                                "expense_loans": "${form.expense_loans}",
+                                "expense_cellphone": "${form.expense_cellphone}",
+                                "expense_policies": "${form.expense_policies}",
+                                "expense_food_entertainment": "${form.expense_food_entertainment}",
+                                "expense_credit_card": "${form.expense_credit_card}",
+                                "expense_furniture": "${form.expense_furniture}",
+                                "bank_name": "${form.bank_name}",
+                                "bank_account_number": "${form.bank_account_number}",
+                                "account_type": "${form.account_type}"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "id": "DOCUMENTS_UPLOAD",
+            "title": "Supporting Documents",
+            "terminal": true,
+            "data": {
+                "full_name": {
+                    "type": "string",
+                    "__example__": "John Doe"
+                },
+                "id_number": {
+                    "type": "string",
+                    "__example__": "0000000000000"
+                },
+                "cell_phone": {
+                    "type": "string",
+                    "__example__": "0821234567"
+                },
+                "email": {
+                    "type": "string",
+                    "__example__": "john@example.com"
+                },
+                "marital_status": {
+                    "type": "string",
+                    "__example__": "single"
+                },
+                "date_married": {
+                    "type": "string",
+                    "__example__": ""
+                },
+                "home_address": {
+                    "type": "string",
+                    "__example__": "123 Main Street"
+                },
+                "period_at_address": {
+                    "type": "string",
+                    "__example__": "2 years"
+                },
+                "accommodation_type": {
+                    "type": "string",
+                    "__example__": "renting"
+                },
+                "kin_full_name": {
+                    "type": "string",
+                    "__example__": "Jane Doe"
+                },
+                "kin_address": {
+                    "type": "string",
+                    "__example__": "456 Other Street"
+                },
+                "kin_contact_number": {
+                    "type": "string",
+                    "__example__": "0831234567"
+                },
+                "employer_name": {
+                    "type": "string",
+                    "__example__": "ABC Company"
+                },
+                "employer_address": {
+                    "type": "string",
+                    "__example__": "789 Work Street"
+                },
+                "period_at_employer": {
+                    "type": "string",
+                    "__example__": "3 years"
+                },
+                "work_telephone": {
+                    "type": "string",
+                    "__example__": "0111234567"
+                },
+                "salary_gross": {
+                    "type": "string",
+                    "__example__": "25000"
+                },
+                "salary_net": {
+                    "type": "string",
+                    "__example__": "18000"
+                },
+                "expense_bond_rent": {
+                    "type": "string",
+                    "__example__": "5000"
+                },
+                "expense_car": {
+                    "type": "string",
+                    "__example__": "3000"
+                },
+                "expense_loans": {
+                    "type": "string",
+                    "__example__": "1000"
+                },
+                "expense_cellphone": {
+                    "type": "string",
+                    "__example__": "500"
+                },
+                "expense_policies": {
+                    "type": "string",
+                    "__example__": "500"
+                },
+                "expense_food_entertainment": {
+                    "type": "string",
+                    "__example__": "2000"
+                },
+                "expense_credit_card": {
+                    "type": "string",
+                    "__example__": "500"
+                },
+                "expense_furniture": {
+                    "type": "string",
+                    "__example__": "500"
+                },
+                "bank_name": {
+                    "type": "string",
+                    "__example__": "fnb"
+                },
+                "bank_account_number": {
+                    "type": "string",
+                    "__example__": "62123456789"
+                },
+                "account_type": {
+                    "type": "string",
+                    "__example__": "cheque"
+                }
+            },
+            "layout": {
+                "type": "SingleColumnLayout",
+                "children": [
+                    {
+                        "type": "TextHeading",
+                        "text": "Supporting Documents"
+                    },
+                    {
+                        "type": "TextSubheading",
+                        "text": "Section 5 of 5 — Upload all required documents"
+                    },
+                    {
+                        "type": "TextBody",
+                        "text": "Please upload ALL of the following documents in one upload (max 10 files):\n\n1. Clear copy of valid ID\n2. Clear copy of valid Driver's Licence\n3. 3 months payslips\n4. 3 months bank statements\n5. Proof of residence\n\nAccepted formats: PDF, JPG, PNG. Max 10 MB per file."
+                    },
+                    {
+                        "type": "Form",
+                        "name": "documents_form",
+                        "children": [
+                            {
+                                "type": "DocumentPicker",
+                                "label": "Upload All Supporting Documents",
+                                "description": "Select all 5 required documents: ID, Driver's Licence, 3x Payslips, 3x Bank Statements, Proof of Residence",
+                                "name": "all_documents",
+                                "min-uploaded-documents": 5,
+                                "max-uploaded-documents": 10,
+                                "max-file-size-kb": 10240,
+                                "allowed-mime-types": [
+                                    "image/jpeg",
+                                    "image/png",
+                                    "application/pdf"
+                                ]
+                            },
+                            {
+                                "type": "OptIn",
+                                "label": "I confirm that all information provided is accurate and true, and I consent to this information being used to process my finance application.",
+                                "required": true,
+                                "name": "consent"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Footer",
+                        "label": "Submit Application",
+                        "on-click-action": {
+                            "name": "complete",
+                            "payload": {
+                                "full_name": "${data.full_name}",
+                                "id_number": "${data.id_number}",
+                                "cell_phone": "${data.cell_phone}",
+                                "email": "${data.email}",
+                                "marital_status": "${data.marital_status}",
+                                "date_married": "${data.date_married}",
+                                "home_address": "${data.home_address}",
+                                "period_at_address": "${data.period_at_address}",
+                                "accommodation_type": "${data.accommodation_type}",
+                                "kin_full_name": "${data.kin_full_name}",
+                                "kin_address": "${data.kin_address}",
+                                "kin_contact_number": "${data.kin_contact_number}",
+                                "employer_name": "${data.employer_name}",
+                                "employer_address": "${data.employer_address}",
+                                "period_at_employer": "${data.period_at_employer}",
+                                "work_telephone": "${data.work_telephone}",
+                                "salary_gross": "${data.salary_gross}",
+                                "salary_net": "${data.salary_net}",
+                                "expense_bond_rent": "${data.expense_bond_rent}",
+                                "expense_car": "${data.expense_car}",
+                                "expense_loans": "${data.expense_loans}",
+                                "expense_cellphone": "${data.expense_cellphone}",
+                                "expense_policies": "${data.expense_policies}",
+                                "expense_food_entertainment": "${data.expense_food_entertainment}",
+                                "expense_credit_card": "${data.expense_credit_card}",
+                                "expense_furniture": "${data.expense_furniture}",
+                                "bank_name": "${data.bank_name}",
+                                "bank_account_number": "${data.bank_account_number}",
+                                "account_type": "${data.account_type}",
+                                "all_documents": "${form.all_documents}",
+                                "consent": "${form.consent}"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

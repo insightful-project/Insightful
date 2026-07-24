@@ -1,0 +1,166 @@
+{
+  "name": "Insightful — Stack Health Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://insightful-hub:80/api/status.php",
+        "authentication": "none",
+        "sendBody": false,
+        "sendHeaders": false,
+        "sendQuery": false,
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      },
+      "id": "fetch-status",
+      "name": "Fetch Stack Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter for offline services from Hub status API\nconst items = $input.all();\nconst offline = items.filter(item => item.json.status === 'error');\n\nif (offline.length === 0) {\n  // All healthy — return a single item with count 0\n  return [{ json: { offlineCount: 0, message: '' } }];\n}\n\nconst names = offline.map(s => s.json.name).join(', ');\nconst time = new Date().toLocaleString();\n\nreturn [{\n  json: {\n    offlineCount: offline.length,\n    message: `⚠️ Insightful Stack Alert\\nOffline services: ${names}\\nTime: ${time}`\n  }\n}];"
+      },
+      "id": "filter-offline",
+      "name": "Check Health",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "if-offline",
+              "leftValue": "={{ $json.offlineCount }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "larger"
+              }
+            }
+          ]
+        }
+      },
+      "id": "has-offline",
+      "name": "Has Offline Services?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        840,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.GOOGLE_CHAT_WEBHOOK_URL }}",
+        "method": "POST",
+        "authentication": "none",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"text\": \"{{ $json.message }}\"}",
+        "sendHeaders": false,
+        "sendQuery": false,
+        "options": {}
+      },
+      "id": "send-alert",
+      "name": "Send Google Chat Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "Every 5 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Stack Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Stack Status": {
+      "main": [
+        [
+          {
+            "node": "Check Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Health": {
+      "main": [
+        [
+          {
+            "node": "Has Offline Services?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Offline Services?": {
+      "main": [
+        [
+          {
+            "node": "Send Google Chat Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "infrastructure"
+    }
+  ]
+}

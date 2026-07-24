@@ -1,0 +1,29 @@
+[
+  {
+    "label": "Life OS",
+    "host": "lifeos-db",
+    "port": 5432,
+    "name": "lifeos",
+    "user": "lifeos_user",
+    "pwSource": "compose/.env → LIFEOS_PASSWORD",
+    "stack": "lifeos"
+  },
+  {
+    "label": "codeSpace",
+    "host": "codespace-db",
+    "port": 5432,
+    "name": "codespace",
+    "user": "codespace_user",
+    "pwSource": "compose/.env → CODESPACE_DB_PASSWORD",
+    "stack": "codespace"
+  },
+  {
+    "label": "n8n",
+    "host": "n8n-db",
+    "port": 5432,
+    "name": "n8n",
+    "user": "n8n",
+    "pwSource": "compose/.env → N8N_DB_PASSWORD",
+    "stack": "n8n"
+  }
+]

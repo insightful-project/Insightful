@@ -1,0 +1,21 @@
+# Use official n8n image as base
+FROM n8nio/n8n:latest
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV N8N_PORT=5678
+ENV N8N_PROTOCOL=http
+ENV N8N_HOST=localhost
+ENV N8N_EDITOR_BASE_URL=http://localhost:5678
+
+# Create app directory
+WORKDIR /home/node
+
+# Switch to node user for security
+USER node
+
+# Expose port
+EXPOSE 5678
+
+# Command to run n8n
+CMD ["n8n", "start"]

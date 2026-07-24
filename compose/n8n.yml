@@ -1,0 +1,123 @@
+# Insightful — n8n automation stack
+# Workflow automation with Postgres backend. Connect to local LLMs, APIs, and services.
+# Web UI: http://localhost:5678  │  Default login: admin / (set via N8N_BASIC_AUTH_PASSWORD)
+# Usage: podman compose -f compose/n8n.yml up -d
+
+name: n8n
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  n8n-postgres:
+    image: docker.io/postgres:16-alpine
+    container_name: n8n-db
+    restart: unless-stopped
+    stop_grace_period: 30s
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${N8N_DB_USER:-insightful_n8n}
+      POSTGRES_PASSWORD: ${N8N_DB_PASSWORD}
+      POSTGRES_DB: ${N8N_DB:-insightful_n8n}
+    ports:
+      - "127.0.0.1:${N8N_DB_PORT:-5435}:5432"
+    volumes:
+      - n8n-postgres:/var/lib/postgresql/data
+    networks:
+      - insightful
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${N8N_DB_USER:-insightful_n8n} -d ${N8N_DB:-insightful_n8n}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  n8n:
+    image: docker.io/n8nio/n8n:2.28.5
+    container_name: n8n
+    restart: unless-stopped
+    stop_grace_period: 30s
+    env_file: .env
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: n8n-postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${N8N_DB:-insightful_n8n}
+      DB_POSTGRESDB_USER: ${N8N_DB_USER:-insightful_n8n}
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_PASSWORD}
+      N8N_PORT: ${N8N_PORT:-5678}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_USER_MANAGEMENT_JWT_SECRET: ${N8N_JWT_SECRET}
+      N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE:-true}
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+      N8N_HOST: ${N8N_HOST:-n8n.insightful-projects.com}
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: ${WEBHOOK_URL:-http://n8n.insightful-projects.com/}
+      NODE_ENV: production
+      GENERIC_TIMEZONE: UTC
+      NODE_OPTIONS: --max-old-space-size=768
+      N8N_METRICS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_LOG_LEVEL: info
+      # Google Chat webhook for stack health alerts (set in .env)
+      # Create a webhook in Google Chat room → Apps & Integrations → Webhooks
+      GOOGLE_CHAT_WEBHOOK_URL: ${GOOGLE_CHAT_WEBHOOK_URL:-}
+    ports:
+      - "127.0.0.1:${N8N_PORT:-5678}:${N8N_PORT:-5678}"
+    volumes:
+      - type: bind
+        source: ./../data/n8n/data
+        target: /home/node/.n8n
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    depends_on:
+      n8n-postgres:
+        condition: service_healthy
+    networks:
+      - insightful
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${N8N_PORT:-5678}/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  n8n-postgres:
