@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, stable, live]
+  pull_request:
+
+jobs:
+  compose:
+    name: Validate compose files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate each compose stack
+        run: |
+          set -e
+          for f in compose/*.yml; do
+            echo "=== $f ==="
+            docker compose -f "$f" config --quiet || exit 1
+          done
+
+  scripts:
+    name: Shell syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n on all scripts
+        run: |
+          set -e
+          for f in $(git ls-files '*.sh'); do
+            bash -n "$f" || exit 1
+          done
+          echo "All scripts pass bash -n"
