@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare env from template
+        run: cp compose/.env.example compose/.env
       - name: Validate each compose stack
         run: |
           set -e
