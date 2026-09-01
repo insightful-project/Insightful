@@ -4,6 +4,9 @@
 
 name: lifeos
 
+include:
+  - redis.yml
+
 networks:
   insightful:
     external: true
