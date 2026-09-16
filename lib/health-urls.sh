@@ -9,7 +9,6 @@ HEALTH_URLS=(
     "CloudBeaver|http://localhost:8978"
     "Ollama LLM|http://localhost:11434/api/tags"
     "n8n|http://localhost:5678/healthz"
-    "Qdrant|http://localhost:6333"
     "Hub|http://localhost:3003"
     "NPM Admin|http://localhost:81"
     "code-server|http://localhost:8081"

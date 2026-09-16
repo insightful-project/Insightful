@@ -31,14 +31,12 @@ source "$ROOT_DIR/lib/banner.sh"
 # Usage: compose "compose/lifeos.yml" up -d
 
 # Map compose file → container names for that stack.
-# Usage: _stack_containers "qdrant.yml" names   # populates array $names
 _stack_containers()
 {
     local yml="$1"
     local -n _out="$2"
     case "$yml" in
         (redis.yml)          _out=( "insightful-redis" ) ;;
-        (qdrant.yml)         _out=( "insightful-mem0-qdrant" ) ;;
         (ollama.yml)         _out=( "insightful-ollama" ) ;;
         (lifeos.yml)         _out=( "lifeos-db" "lifeos-api-nest" "lifeos-vue-app" ) ;;
         (odysseus.yml)       _out=( "odysseus" "odysseus-chromadb" "odysseus-searxng" "odysseus-ntfy" ) ;;
@@ -61,7 +59,6 @@ _stack_label()
     local yml="$1"
     case "$yml" in
         (redis.yml)          echo "Redis" ;;
-        (qdrant.yml)         echo "Qdrant" ;;
         (ollama.yml)         echo "Ollama" ;;
         (lifeos.yml)         echo "LifeOS" ;;
         (odysseus.yml)       echo "Odysseus" ;;
@@ -85,7 +82,6 @@ _stack_ports()
     local -n _out="$2"
     case "$yml" in
         (redis.yml)          _out=( 6379 ) ;;
-        (qdrant.yml)         _out=( 6333 6334 ) ;;
         (ollama.yml)         _out=( 11434 ) ;;
         (lifeos.yml)         _out=( 5434 4001 3002 ) ;;
         (odysseus.yml)       _out=( 7000 8100 8080 8091 ) ;;
@@ -272,19 +268,6 @@ stack_up()
 # ── Stacks ──────────────────────────────────────────────────────────
 # Each start* function creates the insightful network, then calls
 # stack_up to bring up its compose file.  Some print access info.
-
-# Start Qdrant vector database (used by mem0 for semantic memory).
-startQdrant()
-{
-    $PODMAN network create insightful 2>/dev/null || true
-    mkdir -p "$ROOT_DIR/dev/.opencode/ai-memory/qdrant_storage"
-    local rc=0
-    stack_up qdrant.yml up -d || rc=$?
-    if [[ "$rc" -ne 0 ]]; then
-        echo -e "  ${R}✗${N} Qdrant failed to start"
-        return "$rc"
-    fi
-}
 
 # Start Ollama local LLM (Qwen 2.5:7b, GPU-enabled).
 startOllama()
@@ -488,7 +471,6 @@ startNpm()
     printf "  %-30s %-25s %s\n" "searxng.insightful-projects.com" "searxng:8080" "none"
     printf "  %-30s %-25s %s\n" "chromadb.insightful-projects.com" "chromadb:8000" "none"
     printf "  %-30s %-25s %s\n" "ntfy.insightful-projects.com" "ntfy:80" "none"
-    printf "  %-30s %-25s %s\n" "qdrant.insightful-projects.com" "qdrant:6333" "none"
     printf "  %-30s %-25s %s\n" "ollama.insightful-projects.com" "insightful-ollama:11434" "none"
     printf "  %-30s %-25s %s\n" "npm.insightful-projects.com" "npm:81" "NPM admin"
     echo ""
@@ -641,8 +623,6 @@ startAll()
     mkdir -p "$ROOT_DIR/data/hub"
     mkdir -p "$ROOT_DIR/data/codespace/logs"
 
-    startQdrant || true
-    echo ""
     startOllama || true
     echo ""
     startRedis || true
@@ -693,9 +673,6 @@ case "$PRODUCT" in
         ;;
     (n8n)
         startN8n
-        ;;
-    (qdrant)
-        startQdrant
         ;;
     (redis)
         startRedis
@@ -762,7 +739,6 @@ case "$PRODUCT" in
         echo "  life-os     Life OS v2 (Postgres + API + Frontend)"
         echo "  odysseus    Odysseus AI (AI + ChromaDB + SearXNG + ntfy)"
         echo "  n8n         n8n automation + its own Postgres"
-        echo "  qdrant      Qdrant vector DB only"
         echo "  redis       Redis cache / rate limit store (port 6379)"
         echo "  observability Loki + Grafana log aggregation (ports 3100, 3000)"
         echo "  ollama      Ollama local LLM (Qwen 2.5:7b with GPU)"

@@ -23,8 +23,8 @@ fi
 
 # Validate
 case "$INSIGHTFUL_MODE" in
-    live|dev) ;;
-    *) INSIGHTFUL_MODE="dev" ;;
+    (live|dev) ;
+    (*) INSIGHTFUL_MODE="dev" ;;
 esac
 
 export INSIGHTFUL_MODE

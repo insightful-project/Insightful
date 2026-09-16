@@ -28,7 +28,6 @@ _stack_ok()
         (n8n.yml)            containers=( "n8n-db" "n8n" ) ;;
         (redis.yml)          containers=( "insightful-redis" ) ;;
         (observability.yml)  containers=( "insightful-loki" "insightful-grafana" ) ;;
-        (qdrant.yml)         containers=( "insightful-mem0-qdrant" ) ;;
         (ollama.yml)         containers=( "insightful-ollama" ) ;;
         (npm.yml)            containers=( "npm" ) ;;
         (code-server.yml)    containers=( "insightful-code-server" ) ;;
@@ -73,7 +72,6 @@ case "$PRODUCT" in
     (life-os)    echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}life-os${N}$(printf '%*s' $((BW - 18)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "life-os"    lifeos.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (odysseus)   echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}odysseus${N}$(printf '%*s' $((BW - 18)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "odysseus"   odysseus.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (n8n)        echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}n8n${N}$(printf '%*s' $((BW - 14)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "n8n"        n8n.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
-    (qdrant)     echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}qdrant${N}$(printf '%*s' $((BW - 16)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "qdrant"     qdrant.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (ollama)     echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}ollama${N}$(printf '%*s' $((BW - 16)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "ollama"     ollama.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (npm)        echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}npm${N}$(printf '%*s' $((BW - 12)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "npm"        npm.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (code-server) echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}code-server${N}$(printf '%*s' $((BW - 20)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "code-server" code-server.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
@@ -90,7 +88,7 @@ case "$PRODUCT" in
         echo -e "  ${C}┌${BOX}┐${N}"
         echo -e "  ${C}│${N}  ${W}RECYCLING ALL STACKS${N}$(printf '%*s' $((BW - 22)) '')${C}│${N}"
         echo -e "  ${C}├${BOX}┤${N}"
-        for pair in "qdrant|qdrant.yml" "ollama|ollama.yml" "redis|redis.yml" "observability|observability.yml" "life-os|lifeos.yml" "n8n|n8n.yml" "odysseus|odysseus.yml" "npm|npm.yml" "code-server|code-server.yml" "codespace|codespace.yml" "cloudbeaver|cloudbeaver.yml" "hub|insightful-hub.yml" "oauth2|oauth2.yml"; do
+        for pair in "ollama|ollama.yml" "redis|redis.yml" "observability|observability.yml" "life-os|lifeos.yml" "n8n|n8n.yml" "odysseus|odysseus.yml" "npm|npm.yml" "code-server|code-server.yml" "codespace|codespace.yml" "cloudbeaver|cloudbeaver.yml" "hub|insightful-hub.yml" "oauth2|oauth2.yml"; do
             label="${pair%%|*}"
             yml="${pair#*|}"
             echo -e "  ${C}│${N}"

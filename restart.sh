@@ -11,7 +11,6 @@ _containers()
     local product="$1"
     local -n _out="$2"
     case "$product" in
-        (qdrant)      _out=( "insightful-mem0-qdrant" ) ;;
         (ollama)      _out=( "insightful-ollama" ) ;;
         (life-os)     _out=( "lifeos-db" "lifeos-api-nest" "lifeos-vue-app" ) ;;
         (odysseus)    _out=( "odysseus" "odysseus-chromadb" "odysseus-searxng" "odysseus-ntfy" ) ;;
@@ -38,7 +37,7 @@ if [[ -z "$PRODUCT" ]]; then
     echo -e "  ${C}│${N}${D}  Usage: ./restart.sh <product> [service]${N}$(printf '%*s' $((BW - 44)) '')${C}│${N}"
     echo -e "  ${C}│${N}${D}  Example: ./restart.sh life-os api-nest${N}$(printf '%*s' $((BW - 42)) '')${C}│${N}"
     echo -e "  ${C}├${BOX}┤${N}"
-    echo -e "  ${C}│${N}  ${Y}Products:${N}${D} qdrant ollama life-os odysseus n8n npm code-server hub codespace cloudbeaver redis observability oauth2${N}$(printf '%*s' $((BW - 111)) '')${C}│${N}"
+    echo -e "  ${C}│${N}  ${Y}Products:${N}${D} ollama life-os odysseus n8n npm code-server hub codespace cloudbeaver redis observability oauth2${N}$(printf '%*s' $((BW - 108)) '')${C}│${N}"
     echo -e "  ${C}└${BOX}┘${N}"
     exit 1
 fi

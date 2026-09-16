@@ -12,7 +12,6 @@
   {"name":"Ollama","group":"ai","url":"http://localhost:11434","health":"http://insightful-ollama:11434/api/tags"},
   {"name":"ChromaDB","group":"ai","url":"http://localhost:8100","health":"http://odysseus-chromadb:8000/api/v2/heartbeat"},
   {"name":"SearXNG","group":"ai","url":"http://localhost:8080","health":"http://odysseus-searxng:8080/"},
-  {"name":"Qdrant","group":"infrastructure","url":"http://localhost:6333","health":"http://insightful-mem0-qdrant:6333/"},
   {"name":"code-server","group":"infrastructure","url":"http://localhost:8081","health":"http://insightful-code-server:8080/healthz"},
   {"name":"NPM","group":"infrastructure","url":"https://npm.insightful-projects.com","health":"http://npm:81/"},
   {"name":"Hub","group":"infrastructure","url":"http://hub.insightful-projects.com","health":"http://localhost:80/"}

@@ -59,7 +59,6 @@ DIRECT_HOSTS["vue.insightful-projects.com"]="vue-app:3000|Vue frontend (JWT)"
 DIRECT_HOSTS["searxng.insightful-projects.com"]="searxng:8080|SearXNG search"
 DIRECT_HOSTS["chromadb.insightful-projects.com"]="chromadb:8000|ChromaDB"
 DIRECT_HOSTS["ntfy.insightful-projects.com"]="ntfy:80|ntfy notifications"
-DIRECT_HOSTS["qdrant.insightful-projects.com"]="qdrant:6333|Qdrant dashboard"
 DIRECT_HOSTS["ollama.insightful-projects.com"]="insightful-ollama:11434|Local LLM"
 DIRECT_HOSTS["npm.insightful-projects.com"]="npm:81|NPM admin UI"
 

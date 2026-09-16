@@ -10,7 +10,6 @@ include:
   - observability.yml
   - odysseus.yml
   - n8n.yml
-  - qdrant.yml
   - npm.yml
   - ollama.yml
   - code-server.yml

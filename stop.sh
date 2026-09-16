@@ -13,7 +13,6 @@ declare -A STACKS=(
     [life-os]=lifeos.yml
     [odysseus]=odysseus.yml
     [n8n]=n8n.yml
-    [qdrant]=qdrant.yml
     [ollama]=ollama.yml
     [npm]=npm.yml
     [code-server]=code-server.yml
@@ -25,7 +24,7 @@ declare -A STACKS=(
     [observability]=observability.yml
 )
 declare -A ALIASES=( [codeserver]=code-server [cb]=cloudbeaver [obs]=observability )
-ORDER=( npm code-server oauth2 n8n redis observability life-os hub codespace cloudbeaver odysseus ollama qdrant )
+ORDER=( npm code-server oauth2 n8n redis observability life-os hub codespace cloudbeaver odysseus ollama )
 
 _stop()
 {
