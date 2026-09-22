@@ -1,6 +1,7 @@
 # Insightful — Full stack (aggregate)
 # Includes all stacks via 'include:' directives. Same as ./start.sh all.
 # Usage: podman compose -f compose/insightful.yml up -d
+# Note: odysseus.yml and ollama.yml run locally but are kept out of the repo.
 
 name: insightful
 
@@ -8,10 +9,8 @@ include:
   - lifeos.yml
   - redis.yml
   - observability.yml
-  - odysseus.yml
   - n8n.yml
   - npm.yml
-  - ollama.yml
   - code-server.yml
   - insightful-hub.yml
   - codespace.yml
