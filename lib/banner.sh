@@ -1,12 +1,12 @@
 # ── ASCII Art Banners for Insightful CLI ──
 # Source: source lib/banner.sh
 #
-# Palette inspired by Odysseus: --fg: #9cdef2, --green: #50fa7b, --red: #e06c75
+# Palette: cyan #9cdef2 primary, green #50fa7b, red #e06c75
 
-C=$'\033[0;36m'    # cyan primary    (Odysseus --fg)
-G=$'\033[0;32m'    # green           (Odysseus --green)
-Y=$'\033[0;33m'    # yellow/warn     (Odysseus --warn)
-R=$'\033[0;31m'    # red             (Odysseus --red)
+C=$'\033[0;36m'    # cyan primary
+G=$'\033[0;32m'    # green
+Y=$'\033[0;33m'    # yellow/warn
+R=$'\033[0;31m'    # red
 B=$'\033[1;34m'    # blue accent
 W=$'\033[1;37m'    # white bold
 D=$'\033[2;37m'    # dim gray
