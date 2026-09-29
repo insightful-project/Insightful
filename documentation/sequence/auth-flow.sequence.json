@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Life OS — Auth Flow",
+    "output": "auth-flow.sequence.html",
+    "quality_profile": "showcase",
+    "viewBox": [1020, 700],
+    "column_fit": "spread",
+    "animation": "trace",
+    "views": [
+      { "id": "login", "label": "Login & token issuing", "focus": ["user", "web", "nest", "auth", "pg"], "note": "Credentials verified against Postgres, JWT + refresh issued; accessToken + user persist to localStorage, refresh rides an HttpOnly cookie." },
+      { "id": "rls-request", "label": "Authenticated request (RLS)", "focus": ["web", "nest", "auth", "pg"], "note": "Bearer + X-Device-Id, JWT guard, then an RLS-scoped Drizzle query." }
+    ]
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "PWA on device" },
+    { "id": "web", "type": "frontend", "label": "Vue SPA", "sublabel": "PWA" },
+    { "id": "nest", "type": "backend", "label": "api-nest", "sublabel": "NestJS :4001" },
+    { "id": "auth", "type": "security", "label": "Auth", "sublabel": "JWT + bcrypt + sessions" },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "rate limit" },
+    { "id": "pg", "type": "database", "label": "PostgreSQL", "sublabel": "lifeos-db" }
+  ],
+  "segments": [
+    { "from": 150, "to": 340, "label": "Login" },
+    { "from": 348, "to": 425, "label": "Token storage" },
+    { "from": 436, "to": 617, "label": "Authenticated request + RLS" }
+  ],
+  "messages": [
+    { "id": "creds", "from": "user", "to": "web", "y": 160, "label": "submit credentials", "variant": "default" },
+    { "id": "login", "from": "web", "to": "nest", "y": 188, "label": "POST /api/auth/login", "variant": "emphasis" },
+    { "id": "throttle", "from": "nest", "to": "redis", "y": 216, "label": "rate limit check", "variant": "default" },
+    { "id": "allow", "from": "redis", "to": "nest", "y": 244, "label": "allow", "variant": "return" },
+    { "id": "verify", "from": "nest", "to": "auth", "y": 274, "label": "verify credentials", "variant": "security" },
+    { "id": "query", "from": "auth", "to": "pg", "y": 302, "label": "SELECT user + hash", "variant": "default" },
+    { "id": "rows", "from": "pg", "to": "auth", "y": 330, "label": "rows", "variant": "return" },
+    { "id": "issued", "from": "auth", "to": "nest", "y": 358, "label": "credentials ok", "variant": "return" },
+    { "id": "respond", "from": "nest", "to": "web", "y": 386, "label": "200 {accessToken, user} · Set-Cookie: refreshToken", "variant": "return" },
+    { "id": "open", "from": "user", "to": "web", "y": 442, "label": "open Finance", "variant": "default" },
+    { "id": "fetch", "from": "web", "to": "nest", "y": 470, "label": "GET /api/finance/transactions", "variant": "emphasis" },
+    { "id": "guard", "from": "nest", "to": "auth", "y": 498, "label": "verify JWT (guard)", "variant": "security" },
+    { "id": "claims", "from": "auth", "to": "nest", "y": 526, "label": "claims ok", "variant": "return" },
+    { "id": "rls", "from": "nest", "to": "pg", "y": 554, "label": "SET LOCAL user_id/device_id → Drizzle", "variant": "emphasis" },
+    { "id": "data", "from": "pg", "to": "nest", "y": 582, "label": "rows", "variant": "return" },
+    { "id": "json", "from": "nest", "to": "web", "y": 610, "label": "200 JSON", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "web", "from": 148, "to": 616, "type": "frontend" },
+    { "participant": "nest", "from": 184, "to": 614, "type": "backend" },
+    { "participant": "auth", "from": 270, "to": 362, "type": "security" },
+    { "participant": "auth", "from": 494, "to": 532, "type": "security" },
+    { "participant": "redis", "from": 212, "to": 250, "type": "database" },
+    { "participant": "pg", "from": 298, "to": 336, "type": "database" },
+    { "participant": "pg", "from": 550, "to": 588, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "Happy path", "items": ["Login verifies bcrypt hash and issues JWT + refresh", "accessToken + user persist in localStorage; refresh rides an HttpOnly cookie", "Authenticated requests ride Bearer + X-Device-Id"] },
+    { "dot": "rose", "title": "RLS scope", "items": ["RlsInterceptor wraps each request in a Drizzle transaction", "SET LOCAL app.user_id / app.device_id limits rows to the session device", "Auth tables excluded so login can run unauthenticated"] },
+    { "dot": "orange", "title": "Offline / refresh", "items": ["Refresh on expiry or 401 → POST /api/auth/refresh; CAS rotation matches old refresh-token hash", "Refresh failure propagates error; stored (possibly expired) token remains in localStorage; Dexie app data continues independently", "Throttling is Redis-backed across instances"] }
+  ]
+}

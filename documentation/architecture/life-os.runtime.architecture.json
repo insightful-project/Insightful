@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Life OS v2 — Runtime",
+    "output": "life-os.runtime.architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1220, 780],
+    "views": [
+      { "id": "request-path", "label": "Offline-first request path", "focus": ["user", "vue", "dexie", "nest", "pg"], "note": "From the PWA to durable state, with Dexie holding the offline copy." },
+      { "id": "async-dispatch", "label": "Async dispatch", "focus": ["nest", "bull", "ntfy", "n8n"], "note": "Notifications and external automation run through the Bull queue." }
+    ]
+  },
+  "components": [
+    { "id": "user", "type": "external", "label": "User", "sublabel": "PWA on device", "pos": [540, 70], "size": [130, 64] },
+    { "id": "vue", "type": "frontend", "label": "Vue SPA", "sublabel": "nginx · :3002 / :3000", "pos": [540, 230], "size": [150, 66] },
+    { "id": "dexie", "type": "database", "label": "Dexie", "sublabel": "IndexedDB (client)", "pos": [300, 230], "size": [130, 62] },
+    { "id": "nest", "type": "backend", "label": "api-nest", "sublabel": "NestJS · :4001", "pos": [540, 430], "size": [160, 70], "tag": "process layer" },
+    { "id": "pg", "type": "database", "label": "PostgreSQL 16", "sublabel": "lifeos-db · :5434", "pos": [900, 430], "size": [160, 64] },
+    { "id": "redis", "type": "database", "label": "Redis 7", "sublabel": "cache · rate limit · :6379", "pos": [900, 230], "size": [160, 64] },
+    { "id": "bull", "type": "messagebus", "label": "Bull Queue", "sublabel": "async jobs · 3 retries", "pos": [540, 610], "size": [130, 64] },
+    { "id": "ntfy", "type": "messagebus", "label": "ntfy", "sublabel": "push · :8091", "pos": [300, 610], "size": [120, 62] },
+    { "id": "n8n", "type": "backend", "label": "n8n webhooks", "sublabel": "automation · :5678", "pos": [760, 610], "size": [140, 62] },
+    { "id": "odysseus", "type": "backend", "label": "Odysseus", "sublabel": "AI proxy · :7000", "pos": [80, 610], "size": [130, 62] }
+  ],
+  "connections": [
+    { "id": "serve", "from": "user", "to": "vue", "label": "HTTPS / :3002", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "inproc", "from": "vue", "to": "dexie", "label": "in-process", "variant": "dashed", "fromSide": "left", "toSide": "right", "labelAt": [460, 208] },
+    { "id": "api", "from": "vue", "to": "nest", "label": "/api/* Bearer + X-Device-Id", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "sync", "from": "dexie", "to": "nest", "label": "sync (drain-only today)", "variant": "dashed", "fromSide": "bottom", "toSide": "left", "via": [[365, 330], [500, 330], [500, 465], [535, 465]] },
+    { "id": "sql", "from": "nest", "to": "pg", "label": "Drizzle SQL", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [724, 426] },
+    { "id": "cache", "from": "nest", "to": "redis", "label": "cache · rate-limit", "fromSide": "right", "toSide": "right", "via": [[860, 465], [860, 262], [1130, 262]] },
+    { "id": "enqueue", "from": "nest", "to": "bull", "label": "enqueue", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [576, 556] },
+    { "id": "push", "from": "bull", "to": "ntfy", "label": "push", "variant": "dashed", "fromSide": "left", "toSide": "right" },
+    { "id": "webhook", "from": "bull", "to": "n8n", "label": "webhook POST", "variant": "dashed", "fromSide": "right", "toSide": "left", "labelAt": [715, 695] },
+    { "id": "ai", "from": "nest", "to": "odysseus", "label": "AI /v1", "variant": "dashed", "fromSide": "top", "toSide": "top", "via": [[620, 380], [145, 380]] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Request chain", "items": ["CorrelationIdMiddleware → RlsInterceptor → Redis rate limiter → JwtAuthGuard → Controller → Service", "Every request gets a X-Correlation-Id in Pino context"] },
+    { "dot": "rose", "title": "RLS + auth", "items": ["RlsInterceptor wraps each request in a Drizzle tx with SET LOCAL app.user_id / app.device_id", "13 user-owned tables covered; auth tables excluded for login", "Refresh rotation uses atomic CAS (WHERE refresh_token = $4)"] },
+    { "dot": "emerald", "title": "Offline-first", "items": ["Dexie queues writes locally; the sync engine drains the queue silently until the NestJS sync endpoint lands", "Postgres down → health 503, offline reads unaffected"] }
+  ]
+}

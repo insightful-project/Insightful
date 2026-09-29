@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Insightful — System Overview",
+    "output": "system-overview.architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1260, 820],
+    "views": [
+      { "id": "request-path", "label": "Primary request path", "focus": ["users", "npm", "lifeos"], "note": "Edge to the flagship stack through the reverse proxy." },
+      { "id": "trust-zones", "label": "Trust zones", "focus": ["npm", "hub", "lifeos", "odysseus", "n8n", "codespace", "infra", "ollama"], "note": "Internal bridge network versus reachable providers." }
+    ]
+  },
+  "components": [
+    { "id": "users", "type": "external", "label": "Visitors & Devices", "sublabel": "Browser · PWA", "pos": [560, 50], "size": [140, 64] },
+    { "id": "npm", "type": "cloud", "label": "Nginx Proxy Manager", "sublabel": "reverse proxy :80/:443/:81", "pos": [555, 220], "size": [180, 64], "tag": "edge" },
+    { "id": "hub", "type": "backend", "label": "Insightful Hub", "sublabel": "PHP dashboard :80", "pos": [120, 470], "size": [150, 64] },
+    { "id": "lifeos", "type": "backend", "label": "Life OS v2", "sublabel": "Vue :3002 + NestJS :4001", "pos": [320, 470], "size": [170, 64], "tag": "flagship" },
+    { "id": "odysseus", "type": "backend", "label": "Odysseus", "sublabel": "AI workspace :7000", "pos": [535, 470], "size": [150, 64] },
+    { "id": "n8n", "type": "backend", "label": "n8n", "sublabel": "automation :5678", "pos": [750, 470], "size": [140, 64] },
+    { "id": "infra", "type": "cloud", "label": "Infrastructure", "sublabel": "Redis · Loki · Grafana · code-server · CloudBeaver", "pos": [120, 690], "size": [320, 68] },
+    { "id": "ollama", "type": "backend", "label": "Ollama", "sublabel": "local LLM · Qwen 7B :11434", "pos": [535, 690], "size": [150, 64], "tag": "GPU passthrough" },
+    { "id": "codespace", "type": "backend", "label": "codeSpace", "sublabel": "Spring Boot RPC :7500", "pos": [1050, 690], "size": [160, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Docker Compose Network — insightful bridge", "wraps": ["npm", "hub", "lifeos", "odysseus", "n8n", "infra", "ollama", "codespace"] },
+    { "kind": "security-group", "label": "Public Network · TLS edge", "wraps": ["users"] }
+  ],
+  "connections": [
+    { "id": "entry", "from": "users", "to": "npm", "label": "HTTPS", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "r-hub", "from": "npm", "to": "hub", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "r-lifeos", "from": "npm", "to": "lifeos", "label": "/api/* + /", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [405, 360] },
+    { "id": "r-odysseus", "from": "npm", "to": "odysseus", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "r-n8n", "from": "npm", "to": "n8n", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "lifeos-ai", "from": "lifeos", "to": "odysseus", "label": "AI /v1", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "lifeos-q", "from": "lifeos", "to": "infra", "label": "Redis cache + Bull", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "via": [[405, 600], [280, 600]] },
+    { "id": "ai-ollama", "from": "odysseus", "to": "ollama", "label": "OpenAI-compatible", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelAt": [610, 548] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Edge", "items": ["NPM fronts every *.insightful-projects.com domain", "Domains resolve to 127.0.0.1 in the hosts file until DNS goes live", "Each service stays reachable via its host port if NPM fails"] },
+    { "dot": "emerald", "title": "Data & Trust", "items": ["21 containers on one shared bridge network", "Postgres instances (lifeos :5434, n8n :5435, codespace :5436) stay host-local, never public", "Row-Level Security on all 13 user-owned tables"] },
+    { "dot": "rose", "title": "Shared Dependencies", "items": ["Redis backs cache, rate limiting, and the Bull queue across stacks", "lifeos emits entity RPC to codeSpace :7500 (internal, no NPM route)", "External LLM providers reached from Odysseus only (Gemini · Groq · OpenRouter)"] }
+  ]
+}
