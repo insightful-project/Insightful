@@ -62,4 +62,4 @@ Never write back to this directory from a mirror.
 
 - Google Workspace sync of the mirrored artifacts for client sharing
 - n8n workflow that re-runs `archify-sync.sh` on doc change
-- Additional drill-downs: hub/codespace, odysseus, infra-utilities
+- Additional drill-downs: hub/codespace, ollama, infra-utilities
