@@ -1,32 +1,37 @@
 # Contributing to Insightful Projects
 
-Welcome. We build internal tools across a monorepo of services — NestJS + Drizzle backends, Vue 3 frontends, a Python AI workspace (Odysseus), a PHP dashboard, and Java Spring Boot services. Every contribution should be **lazy, correct, and minimal** — the ponytail principle.
+Welcome. Insightful is an infrastructure and platform repository — Podman Compose stacks, stack-management scripts, environment templates, and architecture documentation. Application code lives in sibling repositories (see below). Every contribution should be **lazy, correct, and minimal** — the ponytail principle.
 
 ## Development Setup
 
-The git root is `dev/` — the monorepo root above it is **not** a git repo.
+The git root is the repository root. There is no `dev/` monorepo root.
 
 ```bash
-git clone <url> dev
-cd dev/ins1ght/products/life-os-v2/server && npm install
-cd dev/ins1ght/products/life-os-v2/vue && npm install
+git clone https://github.com/insightful-project/Insightful.git
+cd Insightful
+cp compose/.env.example compose/.env
 ```
 
-All services run via Podman Compose stacks in `compose/`. See `./start.sh dev` to bring up everything.
+All services run via Podman Compose stacks in `compose/`. See `./start.sh` for the available stacks and `./status.sh` for health checks.
 
 ## Project Layout
 
 | Path | What |
 |---|---|
-| `dev/ins1ght/products/life-os-v2/server/` | NestJS + Drizzle ORM + Postgres + Redis |
-| `dev/ins1ght/products/life-os-v2/vue/` | Vue 3 + Vite + Pinia + Dexie |
-| `dev/insightful-hub/packages/@insightful/codeSpace/` | Shared types, models, rules |
-| `dev/insightful-hub/packages/@insightful/base/` | NestJS superclasses |
-| `odysseus/` | Python AI workspace + LLM proxy |
-| `dev/insightful-hub/` | PHP dashboard |
 | `compose/` | Podman Compose stacks for all services |
-| `dev/ins1ght/docs/` | Build-standard architecture specs |
-| `dev/insightful-hub/ai-framework/ai-memory/` | Running-state architecture docs |
+| `lib/` | Shared shell helpers (mode, notify, health URLs, banner) |
+| `bin/` | One-off setup scripts |
+| `documentation/` | Archify architecture diagrams (JSON + generated HTML) |
+| `dev/ins1ght/docs/` | Build-standard architecture specs (gitignored, private) |
+| `dev/insightful-hub/ai-framework/ai-memory/` | Running-state architecture docs (gitignored, private) |
+
+Sibling repositories, each with its own git history:
+
+| Repository | What |
+|---|---|
+| `dev/ins1ght/products/life-os-v2/` | Life OS — NestJS + Drizzle + Postgres API, Vue 3 frontend |
+| `dev/insightful-hub/` | Hub dashboard, `@insightful/codeSpace` shared types, `@insightful/base` |
+| `encrypt/` | Encryption service |
 
 ## Code Style
 
@@ -35,8 +40,6 @@ See `AGENTS.md` for full conventions. Key rules:
 - **Allman braces** — opening brace on its own line
 - **Parentheses on all args** — never omit them
 - **Ponytail principle** — laziest correct solution. YAGNI → stdlib → native → existing dep → one line. No speculative abstractions.
-
-Pre-commit hooks (Husky + lint-staged) run `eslint --fix` on staged `.ts`/`.js` files. Make sure they pass before pushing.
 
 ## Commit Convention
 
@@ -49,14 +52,27 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 - `infra:` — infrastructure, Docker, Compose, k8s
 - `refactor:` — code change with no behavior change
 
-Examples: `feat(server): add metrics endpoint`, `fix(vue): correct date formatting`.
+Examples: `feat(stack): add ollama profile`, `fix(mode): reject invalid INSIGHTFUL_MODE`.
+
+## Branches
+
+This project uses three long-lived branches and no `main`:
+
+| Branch | Purpose |
+|---|---|
+| `dev` | Integration branch — all work lands here first |
+| `stable` | Released and verified — promoted from `dev` |
+| `live` | Production — promoted from `stable` |
+
+Never commit directly to `stable` or `live`. Work goes `dev → stable → live` via pull request.
 
 ## PR Process
 
-1. Branch from `main` — follow the branch-pipeline docs in `dev/ins1ght/docs/branch-pipeline.md`.
-2. Ensure CI (GitHub Actions in `dev/.github/workflows/ci.yml`) passes — lint, typecheck, tests.
-3. Pre-commit hooks are enforced — don't skip them.
-4. Keep PRs focused. One concern per PR.
+1. Branch from `dev`.
+2. Ensure CI passes. CI validates every compose file and runs `bash -n` over all tracked shell scripts — see `.github/workflows/ci.yml`.
+3. Keep PRs focused. One concern per PR.
+
+The Husky + lint-staged pre-commit hooks live in the Life-OS repository, not here. This repository has no enforced hooks.
 
 ## Architecture Docs — Read First
 

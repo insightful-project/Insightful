@@ -1,25 +1,18 @@
-# ── ntfy Push Notifications ──
+# ── Push Notifications (disabled) ──
 # Source this file to get the `notify` function.
-# ntfy runs inside the Odysseus stack at localhost:8091
 #
-# Fire-and-forget: never blocks startup or shutdown.
-# If ntfy is unreachable, an async warning is printed.
+# ntfy was part of the removed Odysseus stack. The `notify` function is kept as
+# a no-op so start.sh, stop.sh and rebuild.sh keep working unchanged.
 #
-# To receive notifications, subscribe to the topic:
-#   curl -s http://localhost:8091/insightful/raw
-# Or install the ntfy mobile app and subscribe to the topic.
+# ponytail: future task — replace ntfy with an n8n webhook so stack start/stop
+# and rebuild events are delivered by the existing n8n stack (compose/n8n.yml)
+# instead of a dedicated notification container.
+#
+# To restore notifications, replace the body below with a real delivery call.
 
-# Default topic — override via INSIGHTFUL_NTFY_TOPIC env var
-NTFY_TOPIC="${INSIGHTFUL_NTFY_TOPIC:-insightful}"
-
-# Send a push notification via the local ntfy server
-# Backgrounds the curl call so it never blocks execution.
-# Prints a warning asynchronously if ntfy is unreachable.
+# Send a push notification. Currently a no-op.
 # Usage: notify "LifeOS ready"
 notify()
 {
-    local msg="$1"
-    local ntfy_url="http://localhost:8091"
-    # Fire-and-forget — no health probe, zero blocking
-    (curl -sf -X POST -d "$msg" "$ntfy_url/$NTFY_TOPIC" >/dev/null 2>&1 || echo -e "  ${Y}⚠ ntfy not reachable${N}" >&2) &
+    return 0
 }

@@ -7,7 +7,6 @@ The following projects and versions receive active security updates:
 | Project | Supported |
 |---------|-----------|
 | Life OS v2 (dev/ins1ght/products/life-os-v2/) | Latest release |
-| Odysseus (odysseus/) | Latest release |
 | insightful-hub (dev/insightful-hub/) | Latest release |
 | codeSpace (@insightful/codeSpace) | Latest release |
 
@@ -38,6 +37,5 @@ published until a fix has been released.
 This policy applies to all repositories under the Insightful Projects
 organization, including:
 - Life OS v2 (Vue 3 + NestJS stack)
-- Odysseus (AI workspace & LLM proxy)
 - insightful-hub (backend hub & shared packages)
 - @insightful/codeSpace (shared types & domain objects)

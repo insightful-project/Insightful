@@ -7,11 +7,7 @@
   {"name":"CloudBeaver","group":"infrastructure","url":"http://localhost:8978","health":"http://lifeos-cloudbeaver:8978/"},
   {"name":"codeSpace Java","group":"infrastructure","url":"","health":"http://codespace-java:7500/api/codex/logs"},
   {"name":"n8n","group":"automation","url":"https://n8n.insightful-projects.com","health":"http://n8n:5678/healthz"},
-  {"name":"ntfy","group":"automation","url":"http://localhost:8091","health":"http://odysseus-ntfy:80/"},
-  {"name":"Odysseus","group":"ai","url":"https://odysseus.insightful-projects.com","health":"http://odysseus:7000/"},
   {"name":"Ollama","group":"ai","url":"http://localhost:11434","health":"http://insightful-ollama:11434/api/tags"},
-  {"name":"ChromaDB","group":"ai","url":"http://localhost:8100","health":"http://odysseus-chromadb:8000/api/v2/heartbeat"},
-  {"name":"SearXNG","group":"ai","url":"http://localhost:8080","health":"http://odysseus-searxng:8080/"},
   {"name":"code-server","group":"infrastructure","url":"http://localhost:8081","health":"http://insightful-code-server:8080/healthz"},
   {"name":"NPM","group":"infrastructure","url":"https://npm.insightful-projects.com","health":"http://npm:81/"},
   {"name":"Hub","group":"infrastructure","url":"http://hub.insightful-projects.com","health":"http://localhost:80/"}

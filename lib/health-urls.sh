@@ -16,9 +16,5 @@ HEALTH_URLS=(
     "Redis|tcp://localhost:6379"
     "Loki|http://localhost:3100/ready"
     "Grafana|http://localhost:3000/api/health"
-    "Odysseus|http://localhost:7000/api/health"
-    "ntfy|http://localhost:8091/v1/health"
-    "SearXNG|http://localhost:8080/healthz"
-    "ChromaDB|http://localhost:8100/api/v1/heartbeat"
     "OAuth2 n8n|http://localhost:4180/ping"
 )

@@ -42,7 +42,7 @@ Browser (Vue PWA) → REST API (NestJS, port 4001) → Postgres (port 5434)
 | Command | What starts |
 |---------|-------------|
 | `./start.sh life-os` | Postgres + API + Frontend |
-| `./start.sh odysseus` | AI proxy (port 7000) + ChromaDB + SearXNG + ntfy |
+| `./start.sh ollama` | Local LLM (Qwen 2.5:7b, port 11434) |
 | `./start.sh n8n` | Automation platform + its Postgres |
 | `./start.sh all` | Every stack at once |
 

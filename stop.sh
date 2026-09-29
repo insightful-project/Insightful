@@ -11,7 +11,6 @@ source "$ROOT_DIR/lib/box.sh"
 # ponytail: associative array dispatch. Add new stacks here.
 declare -A STACKS=(
     [life-os]=lifeos.yml
-    [odysseus]=odysseus.yml
     [n8n]=n8n.yml
     [ollama]=ollama.yml
     [npm]=npm.yml
@@ -24,7 +23,7 @@ declare -A STACKS=(
     [observability]=observability.yml
 )
 declare -A ALIASES=( [codeserver]=code-server [cb]=cloudbeaver [obs]=observability )
-ORDER=( npm code-server oauth2 n8n redis observability life-os hub codespace cloudbeaver odysseus ollama )
+ORDER=( npm code-server oauth2 n8n redis observability life-os hub codespace cloudbeaver ollama )
 
 _stop()
 {

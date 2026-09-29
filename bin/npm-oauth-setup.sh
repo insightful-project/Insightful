@@ -47,7 +47,6 @@ _get_token()
 declare -A OAUTH_HOSTS
 OAUTH_HOSTS["n8n.insightful-projects.com"]="oauth-n8n:4180|Google SSO (strict allowlist)"
 OAUTH_HOSTS["code.insightful-projects.com"]="oauth-codeserver:4180|Google SSO (strict allowlist)"
-OAUTH_HOSTS["odysseus.insightful-projects.com"]="oauth-odysseus:4180|Google SSO (strict allowlist)"
 OAUTH_HOSTS["cloudbeaver.insightful-projects.com"]="oauth-cloudbeaver:4180|Google SSO (strict allowlist)"
 OAUTH_HOSTS["grafana.insightful-projects.com"]="oauth-grafana:4180|Google SSO (domain)"
 OAUTH_HOSTS["hub.insightful-projects.com"]="oauth-hub:4180|Google SSO (domain)"
@@ -56,9 +55,6 @@ OAUTH_HOSTS["hub.insightful-projects.com"]="oauth-hub:4180|Google SSO (domain)"
 declare -A DIRECT_HOSTS
 DIRECT_HOSTS["api.insightful-projects.com"]="api-nest:4001|NestJS API (JWT)"
 DIRECT_HOSTS["vue.insightful-projects.com"]="vue-app:3000|Vue frontend (JWT)"
-DIRECT_HOSTS["searxng.insightful-projects.com"]="searxng:8080|SearXNG search"
-DIRECT_HOSTS["chromadb.insightful-projects.com"]="chromadb:8000|ChromaDB"
-DIRECT_HOSTS["ntfy.insightful-projects.com"]="ntfy:80|ntfy notifications"
 DIRECT_HOSTS["ollama.insightful-projects.com"]="insightful-ollama:11434|Local LLM"
 DIRECT_HOSTS["npm.insightful-projects.com"]="npm:81|NPM admin UI"
 

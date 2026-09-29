@@ -18,7 +18,6 @@ k8s
 specs/
 data/
 docs/
-odysseus/
 bin/
 lib/
 /*.sh

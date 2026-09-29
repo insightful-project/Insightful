@@ -24,7 +24,6 @@ _stack_ok()
         (lifeos.yml)         containers=( "lifeos-db" "lifeos-api-nest" "lifeos-vue-app" ) ;;
         (codespace.yml)      containers=( "codespace-db" "codespace-java" ) ;;
         (cloudbeaver.yml)    containers=( "lifeos-cloudbeaver" ) ;;
-        (odysseus.yml)       containers=( "odysseus" "odysseus-chromadb" "odysseus-searxng" "odysseus-ntfy" ) ;;
         (n8n.yml)            containers=( "n8n-db" "n8n" ) ;;
         (redis.yml)          containers=( "insightful-redis" ) ;;
         (observability.yml)  containers=( "insightful-loki" "insightful-grafana" ) ;;
@@ -32,7 +31,7 @@ _stack_ok()
         (npm.yml)            containers=( "npm" ) ;;
         (code-server.yml)    containers=( "insightful-code-server" ) ;;
         (insightful-hub.yml) containers=( "insightful-hub" ) ;;
-        (oauth2.yml)         containers=( "oauth-n8n" "oauth-codeserver" "oauth-odysseus" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
+        (oauth2.yml)         containers=( "oauth-n8n" "oauth-codeserver" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
         (*)                  return 1 ;;
     esac
     [[ ${#containers[@]} -eq 0 ]] && return 1
@@ -70,7 +69,6 @@ reboot()
 
 case "$PRODUCT" in
     (life-os)    echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}life-os${N}$(printf '%*s' $((BW - 18)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "life-os"    lifeos.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
-    (odysseus)   echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}odysseus${N}$(printf '%*s' $((BW - 18)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "odysseus"   odysseus.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (n8n)        echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}n8n${N}$(printf '%*s' $((BW - 14)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "n8n"        n8n.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (ollama)     echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}ollama${N}$(printf '%*s' $((BW - 16)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "ollama"     ollama.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
     (npm)        echo -e "  ${C}┌${BOX}┐${N}"; echo -e "  ${C}│${N}  ${W}Rebuilding ${C}npm${N}$(printf '%*s' $((BW - 12)) '')${C}│${N}"; echo -e "  ${C}├${BOX}┤${N}"; reboot "npm"        npm.yml; echo -e "  ${C}└${BOX}┘${N}" ;;
@@ -88,7 +86,7 @@ case "$PRODUCT" in
         echo -e "  ${C}┌${BOX}┐${N}"
         echo -e "  ${C}│${N}  ${W}RECYCLING ALL STACKS${N}$(printf '%*s' $((BW - 22)) '')${C}│${N}"
         echo -e "  ${C}├${BOX}┤${N}"
-        for pair in "ollama|ollama.yml" "redis|redis.yml" "observability|observability.yml" "life-os|lifeos.yml" "n8n|n8n.yml" "odysseus|odysseus.yml" "npm|npm.yml" "code-server|code-server.yml" "codespace|codespace.yml" "cloudbeaver|cloudbeaver.yml" "hub|insightful-hub.yml" "oauth2|oauth2.yml"; do
+        for pair in "ollama|ollama.yml" "redis|redis.yml" "observability|observability.yml" "life-os|lifeos.yml" "n8n|n8n.yml" "npm|npm.yml" "code-server|code-server.yml" "codespace|codespace.yml" "cloudbeaver|cloudbeaver.yml" "hub|insightful-hub.yml" "oauth2|oauth2.yml"; do
             label="${pair%%|*}"
             yml="${pair#*|}"
             echo -e "  ${C}│${N}"
@@ -114,7 +112,6 @@ case "$PRODUCT" in
         echo "Products:"
         echo "  all           Recycle ALL stacks (down + fresh up → verify)"
         echo "  life-os       Recycle Life OS stack"
-        echo "  odysseus      Recycle Odysseus stack"
         echo "  n8n           Recycle n8n stack"
         echo "  redis         Recycle Redis stack"
         echo "  observability Recycle Loki + Grafana stack (or: obs)"

@@ -39,7 +39,6 @@ _stack_containers()
         (redis.yml)          _out=( "insightful-redis" ) ;;
         (ollama.yml)         _out=( "insightful-ollama" ) ;;
         (lifeos.yml)         _out=( "lifeos-db" "lifeos-api-nest" "lifeos-vue-app" ) ;;
-        (odysseus.yml)       _out=( "odysseus" "odysseus-chromadb" "odysseus-searxng" "odysseus-ntfy" ) ;;
         (n8n.yml)            _out=( "n8n-db" "n8n" ) ;;
         (npm.yml)            _out=( "npm" ) ;;
         (code-server.yml)    _out=( "insightful-code-server" ) ;;
@@ -47,7 +46,7 @@ _stack_containers()
         (codespace.yml)      _out=( "codespace-db" "codespace-java" ) ;;
         (observability.yml)  _out=( "insightful-loki" "insightful-grafana" ) ;;
         (cloudbeaver.yml)    _out=( "lifeos-cloudbeaver" ) ;;
-        (oauth2.yml)         _out=( "oauth-n8n" "oauth-codeserver" "oauth-odysseus" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
+        (oauth2.yml)         _out=( "oauth-n8n" "oauth-codeserver" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
         (*)                  _out=( ) ;;
     esac
 }
@@ -61,7 +60,6 @@ _stack_label()
         (redis.yml)          echo "Redis" ;;
         (ollama.yml)         echo "Ollama" ;;
         (lifeos.yml)         echo "LifeOS" ;;
-        (odysseus.yml)       echo "Odysseus" ;;
         (n8n.yml)            echo "n8n" ;;
         (npm.yml)            echo "NPM" ;;
         (code-server.yml)    echo "code-server" ;;
@@ -84,7 +82,6 @@ _stack_ports()
         (redis.yml)          _out=( 6379 ) ;;
         (ollama.yml)         _out=( 11434 ) ;;
         (lifeos.yml)         _out=( 5434 4001 3002 ) ;;
-        (odysseus.yml)       _out=( 7000 8100 8080 8091 ) ;;
         (n8n.yml)            _out=( 5435 5678 ) ;;
         (npm.yml)            _out=( 80 81 ) ;;
         (code-server.yml)    _out=( 8081 ) ;;
@@ -247,7 +244,7 @@ stack_up()
     # Build stacks can take slightly longer at startup too
     case "$yml" in
         (lifeos.yml)                           timeout=300 ;;
-        (odysseus.yml|codespace.yml)            timeout=180 ;;
+        (codespace.yml)                        timeout=180 ;;
         (insightful-hub.yml|cloudbeaver.yml)     timeout=90  ;;
     esac
 
@@ -394,34 +391,6 @@ startLifeOs()
     esac
 }
 
-# Start Odysseus AI stack (LLM proxy + ChromaDB + SearXNG + ntfy).
-startOdysseus()
-{
-    # ponytail: warn if admin password not set or still default
-    if [[ -f "$COMPOSE_DIR/.env" ]]; then
-        ODYSSEUS_ADMIN_PASSWORD=$(grep -E '^ODYSSEUS_ADMIN_PASSWORD=' "$COMPOSE_DIR/.env" 2>/dev/null | cut -d= -f2- || true)
-    fi
-    if [[ -z "${ODYSSEUS_ADMIN_PASSWORD}" || "${ODYSSEUS_ADMIN_PASSWORD}" == "changeme" ]]; then
-        echo -e "  ${R}⚠${N} ODYSSEUS_ADMIN_PASSWORD not set or still default 'changeme' — set it in compose/.env"
-    fi
-
-    $PODMAN network create insightful 2>/dev/null || true
-    mkdir -p "$ROOT_DIR/data/odysseus/chromadb" "$ROOT_DIR/data/odysseus/searxng" "$ROOT_DIR/data/odysseus/ntfy"
-    local rc=0
-    stack_up odysseus.yml up -d --build || rc=$?
-    if [[ "$rc" -ne 0 ]]; then
-        echo -e "  ${R}✗${N} Odysseus failed to start"
-        return "$rc"
-    fi
-    echo ""
-    echo "  Odysseus: http://localhost:7000"
-    echo "  ChromaDB: http://localhost:8100"
-    echo "  SearXNG:  http://localhost:8080"
-    echo "  ntfy:     http://localhost:8091"
-    echo ""
-    echo "  Logs:     $PODMAN compose -f compose/odysseus.yml logs -f"
-}
-
 # Start n8n automation platform with its own Postgres database.
 startN8n()
 {
@@ -463,14 +432,10 @@ startNpm()
     printf "  %-30s %-25s %s\n" "api.insightful-projects.com" "api-nest:4001" "JWT (app)"
     printf "  %-30s %-25s %s\n" "vue.insightful-projects.com" "vue-app:3000" "JWT (app)"
     printf "  %-30s %-25s %s\n" "n8n.insightful-projects.com" "oauth-n8n:4180" "Google SSO (strict)"
-    printf "  %-30s %-25s %s\n" "odysseus.insightful-projects.com" "oauth-odysseus:4180" "Google SSO (strict)"
     printf "  %-30s %-25s %s\n" "hub.insightful-projects.com" "oauth-hub:4180" "Google SSO (domain)"
     printf "  %-30s %-25s %s\n" "cloudbeaver.insightful-projects.com" "oauth-cloudbeaver:4180" "Google SSO (strict)"
     printf "  %-30s %-25s %s\n" "code.insightful-projects.com" "oauth-codeserver:4180" "Google SSO (strict)"
     printf "  %-30s %-25s %s\n" "grafana.insightful-projects.com" "oauth-grafana:4180" "Google SSO (domain)"
-    printf "  %-30s %-25s %s\n" "searxng.insightful-projects.com" "searxng:8080" "none"
-    printf "  %-30s %-25s %s\n" "chromadb.insightful-projects.com" "chromadb:8000" "none"
-    printf "  %-30s %-25s %s\n" "ntfy.insightful-projects.com" "ntfy:80" "none"
     printf "  %-30s %-25s %s\n" "ollama.insightful-projects.com" "insightful-ollama:11434" "none"
     printf "  %-30s %-25s %s\n" "npm.insightful-projects.com" "npm:81" "NPM admin"
     echo ""
@@ -585,7 +550,7 @@ startOauth2()
     fi
     echo ""
     echo "  OAuth2 Proxy sidecars running for:"
-    echo "    n8n, code-server, Odysseus, CloudBeaver (strict allowlist)"
+    echo "    n8n, code-server, CloudBeaver (strict allowlist)"
     echo "    Grafana, Hub (domain: @insightful-projects.com)"
     echo ""
     echo "  Run bin/npm-oauth-setup.sh to configure NPM proxy hosts."
@@ -607,7 +572,7 @@ startInsightfulHub()
     echo "  Domain: http://hub.insightful-projects.com"
 }
 
-# Start all stacks in sequence, with optional ntfy notification.
+# Start all stacks in sequence.
 startAll()
 {
     banner_main "BOOT SEQUENCE"
@@ -667,9 +632,6 @@ case "$PRODUCT" in
         ;;
     (life-os)
         startLifeOs
-        ;;
-    (odysseus)
-        startOdysseus
         ;;
     (n8n)
         startN8n
@@ -737,7 +699,6 @@ case "$PRODUCT" in
         echo "  all         Start everything (full stack)"
         echo "  dev         Start ALL stacks in dev mode (hot-reload)"
         echo "  life-os     Life OS v2 (Postgres + API + Frontend)"
-        echo "  odysseus    Odysseus AI (AI + ChromaDB + SearXNG + ntfy)"
         echo "  n8n         n8n automation + its own Postgres"
         echo "  redis       Redis cache / rate limit store (port 6379)"
         echo "  observability Loki + Grafana log aggregation (ports 3100, 3000)"
@@ -764,7 +725,6 @@ case "$PRODUCT" in
         echo "  ./start.sh all --recreate # force recreate all containers"
         echo "  ./start.sh live         # live container dashboard"
         echo "  ./start.sh life-os dev  # life-os dev stack with hot-reload"
-        echo "  ./start.sh odysseus     # Odysseus stack"
         echo "  ./start.sh n8n          # n8n + Postgres"
         echo "  ./start.sh npm          # Nginx Proxy Manager (port 81)"
         exit 1

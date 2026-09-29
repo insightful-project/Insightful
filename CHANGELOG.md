@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - tsvector GIN indexes on JSONB columns (future perf optimization)
 - Production deployment via Nginx Proxy Manager
 
+### [Removed]
+- Odysseus stack (`odysseus/`, `compose/odysseus.yml`) and its `oauth-odysseus` sidecar — third-party AI workspace removed from the platform
+- ntfy push notifications (`lib/notify.sh` is now a no-op). **Future task:** deliver stack start/stop/rebuild events through the existing n8n stack instead
+- ChromaDB and SearXNG — were only ever part of the Odysseus stack
+- Qdrant references from env examples and the Hub service registry (memory moved to the JSON store on 2026-08-07)
+
 ## [0.4.0] — 2026-07-15
 
 ### [Infrastructure]

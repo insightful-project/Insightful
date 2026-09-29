@@ -51,6 +51,21 @@ vendor/
 # Dev-level opencode scratch
 dev/.opencode/
 
+# Private local tooling — not for public eyes
+.opencode/
+.agents/
+.agents/skills/
+.specify/
+AGENTS.md
+tasks.md
+LEARNING.md
+skills-lock.json
+docs/
+specs/
+dev/ins1ght/docs/
+dev/insightful-hub/ai-framework/
+compose/ollama.yml
+
 # Sensitive platform file
 dev/ins1ght/products/ins1ght-platform/n8n-recovery-codes.txt
 
@@ -58,5 +73,4 @@ dev/ins1ght/products/ins1ght-platform/n8n-recovery-codes.txt
 dev/ins1ght/products/life-os-v2/
 dev/insightful-hub/
 dev/ins1ght/clients/
-odysseus/
 encrypt/

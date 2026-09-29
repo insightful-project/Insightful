@@ -36,7 +36,6 @@ _resolve_yml()
         (cloudbeaver|cb)     echo "cloudbeaver.yml" ;;
         (insightful-hub|hub) echo "insightful-hub.yml" ;;
         (life-os|lifeos)     echo "lifeos.yml" ;;
-        (odysseus)           echo "odysseus.yml" ;;
         (n8n)                echo "n8n.yml" ;;
         (npm)                echo "npm.yml" ;;
         (ollama)             echo "ollama.yml" ;;
@@ -63,8 +62,6 @@ grafana/grafana|semver:major-minor
 grafana/loki|semver:major-minor
 jc21/nginx-proxy-manager|semver:same-major
 codercom/code-server|semver:same-major
-chromadb/chroma|semver:same-major
-binwiederhier/ntfy|semver:v-prefix
 dbeaver/cloudbeaver|semver:same-major
 MAP
 }
@@ -287,7 +284,7 @@ if [[ $# -gt 0 ]]; then
     STACKS=("$@")
 else
     # Update all stacks (dependency order: infra → apps → ai)
-    STACKS=(redis ollama oauth2 observability life-os n8n npm code-server codespace cloudbeaver hub odysseus)
+    STACKS=(redis ollama oauth2 observability life-os n8n npm code-server codespace cloudbeaver hub)
 fi
 
 if [[ "$DO_UPGRADE" -eq 1 ]]; then
@@ -330,7 +327,7 @@ for product in "${STACKS[@]}"; do
     if [[ -z "$yml" ]]; then
         echo -e "  ${C}┌${BOX}┐${N}"
         echo -e "  ${C}│${N}  ${Y}Unknown product: $product${N}$(printf '%*s' $((BW - 22 - ${#product})) '')${C}│${N}"
-        echo -e "  ${C}│${N}  ${D}  Use: redis ollama observability life-os n8n npm code-server codespace cloudbeaver hub odysseus oauth2${N}$(printf '%*s' $((BW - 87)) '')${C}│${N}"
+        echo -e "  ${C}│${N}  ${D}  Use: redis ollama observability life-os n8n npm code-server codespace cloudbeaver hub oauth2${N}$(printf '%*s' $((BW - 87)) '')${C}│${N}"
         echo -e "  ${C}└${BOX}┘${N}"
         ((SKIPPED++))
         continue

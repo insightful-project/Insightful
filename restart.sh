@@ -13,7 +13,6 @@ _containers()
     case "$product" in
         (ollama)      _out=( "insightful-ollama" ) ;;
         (life-os)     _out=( "lifeos-db" "lifeos-api-nest" "lifeos-vue-app" ) ;;
-        (odysseus)    _out=( "odysseus" "odysseus-chromadb" "odysseus-searxng" "odysseus-ntfy" ) ;;
         (n8n)         _out=( "n8n-db" "n8n" ) ;;
         (npm)         _out=( "npm" ) ;;
         (code-server) _out=( "insightful-code-server" ) ;;
@@ -22,7 +21,7 @@ _containers()
         (cloudbeaver) _out=( "lifeos-cloudbeaver" ) ;;
         (redis)       _out=( "insightful-redis" ) ;;
         (observability) _out=( "insightful-loki" "insightful-grafana" ) ;;
-        (oauth2)      _out=( "oauth-n8n" "oauth-codeserver" "oauth-odysseus" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
+        (oauth2)      _out=( "oauth-n8n" "oauth-codeserver" "oauth-cloudbeaver" "oauth-grafana" "oauth-hub" ) ;;
         (*)           _out=( ) ;;
     esac
 }
@@ -37,7 +36,7 @@ if [[ -z "$PRODUCT" ]]; then
     echo -e "  ${C}│${N}${D}  Usage: ./restart.sh <product> [service]${N}$(printf '%*s' $((BW - 44)) '')${C}│${N}"
     echo -e "  ${C}│${N}${D}  Example: ./restart.sh life-os api-nest${N}$(printf '%*s' $((BW - 42)) '')${C}│${N}"
     echo -e "  ${C}├${BOX}┤${N}"
-    echo -e "  ${C}│${N}  ${Y}Products:${N}${D} ollama life-os odysseus n8n npm code-server hub codespace cloudbeaver redis observability oauth2${N}$(printf '%*s' $((BW - 108)) '')${C}│${N}"
+    echo -e "  ${C}│${N}  ${Y}Products:${N}${D} ollama life-os n8n npm code-server hub codespace cloudbeaver redis observability oauth2${N}$(printf '%*s' $((BW - 108)) '')${C}│${N}"
     echo -e "  ${C}└${BOX}┘${N}"
     exit 1
 fi
