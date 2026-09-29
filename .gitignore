@@ -60,10 +60,12 @@ AGENTS.md
 tasks.md
 LEARNING.md
 skills-lock.json
-docs/
+# Agent scratch — local plans, not repo content
+docs/superpowers/
 specs/
-dev/ins1ght/docs/
-dev/insightful-hub/ai-framework/
+# Product docs dir holds a live env file (n8n.env). *.env blocks the file;
+# this blocks the whole dir as a second guard.
+dev/ins1ght/products/ins1ght-platform/docs/
 compose/ollama.yml
 
 # Sensitive platform file
