@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Insightful Hub — Operations Module",
+    "output": "insightful-hub.architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 800],
+    "views": [
+      { "id": "health-loop", "label": "Health alert loop", "focus": ["n8n", "hub", "chat"], "note": "n8n polls the hub every five minutes and alerts on failures." },
+      { "id": "codespace", "label": "codeSpace stack", "focus": ["java", "pg"], "note": "Spring Boot entity RPC over its own Postgres schema." },
+      { "id": "registry", "label": "Service registry", "focus": ["json", "hub", "status"], "note": "The dashboard is data-driven, not hardcoded." }
+    ]
+  },
+  "components": [
+    { "id": "n8n", "type": "backend", "label": "n8n health-alert", "sublabel": "every 5 min · :5678", "pos": [170, 110], "size": [170, 66], "tag": "poller" },
+    { "id": "chat", "type": "external", "label": "Google Chat", "sublabel": "webhook alert", "pos": [170, 250], "size": [170, 62] },
+    { "id": "json", "type": "database", "label": "services.json", "sublabel": "databases.json", "pos": [500, 60], "size": [190, 60], "tag": "registry" },
+    { "id": "hub", "type": "backend", "label": "insightful-hub", "sublabel": "php -S 0.0.0.0:80 · :3003", "pos": [500, 170], "size": [190, 74], "tag": "php:8.3-cli-alpine" },
+    { "id": "status", "type": "backend", "label": "api/status.php", "sublabel": "api/history.php", "pos": [500, 320], "size": [190, 64], "tag": "JSON API" },
+    { "id": "java", "type": "backend", "label": "codespace-java", "sublabel": "entity RPC · :7500", "pos": [860, 110], "size": [180, 70], "tag": "Spring Boot 3.4.4" },
+    { "id": "pg", "type": "database", "label": "codespace-db", "sublabel": "Postgres 16 · :5436", "pos": [860, 320], "size": [180, 64] },
+    { "id": "mcp", "type": "backend", "label": "postgres MCP", "sublabel": "stdio server · pg", "pos": [860, 470], "size": [180, 62], "tag": "agent access" }
+  ],
+  "connections": [
+    { "id": "json-hub", "from": "json", "to": "hub", "label": "registry", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [640, 142] },
+    { "id": "hub-status", "from": "hub", "to": "status", "label": "serves", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [630, 293] },
+    { "id": "n8n-hub", "from": "n8n", "to": "hub", "label": "GET /api/status.php", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "n8n-chat", "from": "n8n", "to": "chat", "label": "POST offline count", "fromSide": "bottom", "toSide": "top", "labelAt": [270, 212] },
+    { "id": "hub-java", "from": "hub", "to": "java", "label": "HEAD probe /api/codex/logs", "fromSide": "right", "toSide": "left", "labelAt": [778, 188] },
+    { "id": "java-pg", "from": "java", "to": "pg", "label": "JDBC code_space_process", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [972, 245] },
+    { "id": "mcp-pg", "from": "mcp", "to": "pg", "label": "pg :5432", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "labelAt": [972, 420] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Hub runtime", "items": ["Data-driven from services.json / databases.json — no hardcoded service list", "fsockopen + HTTP HEAD, 2s timeout → up / degraded / down", "Binds 127.0.0.1:3003 only, cap_drop ALL, 0.25 CPU / 128 MB"] },
+    { "dot": "rose", "title": "codeSpace", "items": ["11 entity models in @insightful/codeSpace — raw TypeScript, no build step", "Token is hash@type@shard@epochMs on both sides, but TS emits a raw id where Java emits sha256(id)[0:12]", "EntityLink is defined twice — base/src/Foundation.ts and codeSpace/models/index.ts"] },
+    { "dot": "emerald", "title": "codespace-java", "items": ["Java 21, spring-boot-starter-jdbc, schema code_space_process.action_history with 5 indexes", "No authentication on any endpoint — internal network only", "RpcLogger mirrors every write to a daily file and to SLF4J"] }
+  ]
+}

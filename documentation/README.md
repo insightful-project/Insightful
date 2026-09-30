@@ -27,11 +27,35 @@ Each diagram is a pair: `<name>.<type>.json` (source) + `<name>.<type>.html`
 |---|---|---|
 | `system-map.md` + `infra-map.md` | `system-overview` | architecture |
 | `infra-map.md` (lifeos drill-down) | `life-os.runtime` | architecture |
+| `infra-map.md` (utility layer) | `infra-utilities` | architecture |
+| `system-map.md` (hub module) | `insightful-hub` | architecture |
+| `codespace-architecture.md` | `class-hierarchy` | architecture |
+| `redaction-contract.md` + `Decision.ts` | `jev-decision` | architecture |
 | `integration-map.md` (Auth Flow) | `auth-flow` | sequence |
-| `data-map.md` | `data-map.erd` (planned) | dataflow |
-| `branch-pipeline.md` + `ci-cd-standards.md` | `branch-pipeline` (planned) | workflow |
-| `decision-log.md` | `decision-log.timeline` (planned) | lifecycle |
-| `class-hierarchy.md` | `class-hierarchy` (planned) | architecture |
+| `data-map.md` | `data-map.erd` | dataflow |
+| `branch-pipeline.md` + `ci-cd-standards.md` | `branch-pipeline` | workflow |
+| `ins1ght-platform` n8n exports | `whatsapp-finance` | workflow |
+| `decision-log.md` | `decision-log.timeline` | lifecycle |
+
+## Coverage
+
+Every module and platform in the repo now has at least one diagram.
+
+| Module / platform | Covered by |
+|---|---|
+| Full stack, 20 containers | `system-overview` |
+| Life OS v2 runtime | `life-os.runtime` |
+| Hub, codeSpace, codespace-java, MCP | `insightful-hub`, `class-hierarchy` |
+| NPM, oauth2-proxy, Redis, Loki, Ollama | `infra-utilities` |
+| Jev decision service | `jev-decision` |
+| ins1ght-platform n8n flows | `whatsapp-finance` |
+| Repo process | `branch-pipeline` |
+| Data layer | `data-map.erd`, `auth-flow` |
+| Decisions | `decision-log.timeline` |
+
+Not yet diagrammed: the three static submodules (`encrypt`, `insight-web`,
+`Valentines-Web`) — no compose file references them, so they have no runtime
+topology to draw.
 
 ## Workflow
 
@@ -62,4 +86,16 @@ Never write back to this directory from a mirror.
 
 - Google Workspace sync of the mirrored artifacts for client sharing
 - n8n workflow that re-runs `archify-sync.sh` on doc change
-- Additional drill-downs: hub/codespace, ollama, infra-utilities
+- PNG/SVG export of the four newest diagrams for client decks
+
+## Verification status
+
+All ten diagrams pass the showcase gate: 9/9 artifact checks, 0 composition
+errors, 0 warnings. `deliver` receipts (spec + artifact SHA-256) are in each
+commit that added a diagram.
+
+`visual-check` has **not** run on any diagram in this store. Windows Chrome
+exists at `/mnt/c/Program Files/Google/Chrome/Application/chrome.exe` but its
+DevTools pipe cannot cross the WSL boundary — `read ECONNRESET`, "Remote
+debugging pipe file descriptors are not open". Browser evidence and perceptual
+visual review are therefore both outstanding, and no claim is made about them.

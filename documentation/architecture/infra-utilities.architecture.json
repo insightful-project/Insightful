@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Infrastructure Utilities",
+    "output": "infra-utilities.architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 850],
+    "views": [
+      { "id": "ingress", "label": "Ingress and auth edge", "focus": ["ext", "npm", "oauth", "hub"], "note": "One proxy terminates TLS; five oauth2-proxies guard the admin surfaces." },
+      { "id": "guarded", "label": "Guarded surfaces", "focus": ["oauth", "n8n", "grafana"], "note": "oauth2-proxy fronts exactly five services." },
+      { "id": "loopback", "label": "Loopback-only services", "focus": ["loop", "redis", "loki", "ollama"], "note": "Everything else binds 127.0.0.1 and is unreachable from the network." }
+    ]
+  },
+  "components": [
+    { "id": "ext", "type": "external", "label": "Internet / LAN", "sublabel": "dns + tls", "pos": [150, 150], "size": [130, 58] },
+    { "id": "npm", "type": "cloud", "label": "NPM", "sublabel": "nginx-proxy-manager", "pos": [390, 150], "size": [180, 70], "tag": "ingress" },
+    { "id": "oauth", "type": "security", "label": "oauth2-proxy", "sublabel": "5 instances", "pos": [660, 150], "size": [180, 66], "tag": "auth edge" },
+    { "id": "n8n", "type": "backend", "label": "n8n", "sublabel": ":5678", "pos": [960, 60], "size": [180, 60] },
+    { "id": "cs", "type": "backend", "label": "code-server", "sublabel": ":8081", "pos": [960, 160], "size": [180, 60] },
+    { "id": "grafana", "type": "backend", "label": "grafana", "sublabel": ":3000", "pos": [960, 260], "size": [180, 60] },
+    { "id": "cb", "type": "backend", "label": "cloudbeaver", "sublabel": ":8978", "pos": [960, 360], "size": [180, 60] },
+    { "id": "hub", "type": "backend", "label": "insightful-hub", "sublabel": ":3003", "pos": [960, 460], "size": [180, 60] },
+    { "id": "loop", "type": "security", "label": "127.0.0.1 only", "sublabel": "no published port", "pos": [390, 400], "size": [200, 58], "tag": "host boundary" },
+    { "id": "redis", "type": "database", "label": "Redis 7", "sublabel": ":6379", "pos": [180, 560], "size": [170, 60] },
+    { "id": "loki", "type": "database", "label": "Loki 3.4", "sublabel": ":3100 → grafana", "pos": [390, 560], "size": [170, 60] },
+    { "id": "ollama", "type": "external", "label": "Ollama", "sublabel": "local LLM · :11434", "pos": [600, 560], "size": [170, 60] }
+  ],
+  "connections": [
+    { "id": "ext-npm", "from": "ext", "to": "npm", "label": "HTTPS :443", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [335, 178] },
+    { "id": "npm-oauth", "from": "npm", "to": "oauth", "label": "proxy_pass", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [615, 182] },
+    { "id": "oauth-n8n", "from": "oauth", "to": "n8n", "fromSide": "right", "toSide": "left" },
+    { "id": "oauth-cs", "from": "oauth", "to": "cs", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "oauth-grafana", "from": "oauth", "to": "grafana", "fromSide": "right", "toSide": "left" },
+    { "id": "oauth-cb", "from": "oauth", "to": "cb", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "oauth-hub", "from": "oauth", "to": "hub", "fromSide": "right", "toSide": "left" },
+    { "id": "loop-redis", "from": "loop", "to": "redis", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "loop-loki", "from": "loop", "to": "loki", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "loop-ollama", "from": "loop", "to": "ollama", "variant": "dashed", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "One ingress", "items": ["NPM is the only service publishing 80 and 443; :81 is its admin UI", "Every other service binds 127.0.0.1 behind a host-side port variable", "All 14 stacks share the external network insightful"] },
+    { "dot": "rose", "title": "Five guarded surfaces", "items": ["The five oauth2-proxy edges carry no repeated label: the auth-edge tag and the card list name all five targets, so the wording would be pure duplication", "oauth2-proxy v7.8.1 runs one instance per target — n8n, code-server, cloudbeaver, grafana, hub", "Redis, Loki and Ollama sit outside the auth edge entirely"] },
+    { "dot": "emerald", "title": "Observability", "items": ["Grafana 11.5 reads Loki 3.4 as its only datasource; provisioning lives in compose/observability/grafana/", "The three host-boundary edges are unlabelled because the parent node already reads 127.0.0.1 only", "cap_drop ALL with explicit cap_add; json-file logging capped at 10 MB × 3"] }
+  ]
+}

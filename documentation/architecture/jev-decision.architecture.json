@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Jev Decision RPC Service",
+    "output": "jev-decision.architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [1240, 760],
+    "views": [
+      { "id": "call-path", "label": "Decision call path", "focus": ["n8n", "jev", "or"], "note": "Redacted state in, calibrated answers and a verdict out." },
+      { "id": "confidence-ladder", "label": "Confidence ladder", "focus": ["jev", "or"], "note": "Thresholds turn confidence into act, reroute, or human." },
+      { "id": "mcp-bridge", "label": "Agent bridge", "focus": ["agent", "mcp", "jev"], "note": "The same service is reachable as an MCP tool." }
+    ]
+  },
+  "components": [
+    { "id": "agent", "type": "external", "label": "AI agent", "sublabel": "triage gate", "pos": [170, 90], "size": [140, 62] },
+    { "id": "mcp", "type": "backend", "label": "jev-wrapper.sh", "sublabel": "stdio → HTTP bridge", "pos": [170, 200], "size": [160, 62], "tag": "MCP tool" },
+    { "id": "n8n", "type": "backend", "label": "n8n", "sublabel": "redaction Code node · :5678", "pos": [170, 400], "size": [160, 68], "tag": "caller" },
+    { "id": "code", "type": "database", "label": "Decision entity", "sublabel": "@insightful/codeSpace", "pos": [530, 90], "size": [180, 64], "tag": "contract" },
+    { "id": "jev", "type": "backend", "label": "insightful-jev", "sublabel": "POST /decision · :4002", "pos": [530, 200], "size": [180, 72], "tag": "Zod-gated RPC" },
+    { "id": "nest", "type": "backend", "label": "api-nest", "sublabel": "POST /decision · :4001", "pos": [900, 90], "size": [180, 68], "tag": "NestJS path" },
+    { "id": "or", "type": "cloud", "label": "OpenRouter", "sublabel": "/api/alpha/decisions", "pos": [900, 200], "size": [180, 68], "tag": "external" },
+    { "id": "model", "type": "external", "label": "typesafe/jev-1.13", "sublabel": "closed-weight · System One", "pos": [900, 400], "size": [180, 64] }
+  ],
+  "connections": [
+    { "id": "agent-mcp", "from": "agent", "to": "mcp", "label": "decide tool", "fromSide": "bottom", "toSide": "top", "labelAt": [268, 176] },
+    { "id": "mcp-jev", "from": "mcp", "to": "jev", "label": "POST /decision", "fromSide": "right", "toSide": "left", "labelAt": [432, 219] },
+    { "id": "n8n-jev", "from": "n8n", "to": "jev", "label": "POST /decision", "variant": "emphasis", "fromSide": "right", "toSide": "left" },
+    { "id": "jev-or", "from": "jev", "to": "or", "label": "HTTPS + Bearer", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [812, 224] },
+    { "id": "or-model", "from": "or", "to": "model", "label": "routed", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [1010, 334] },
+    { "id": "code-jev", "from": "code", "to": "jev", "label": "field codes", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelAt": [660, 177] },
+    { "id": "code-nest", "from": "code", "to": "nest", "label": "same contract", "variant": "dashed", "fromSide": "right", "toSide": "left", "labelAt": [812, 110] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Answer types", "items": ["noul — calibrated yes/no, used for safe_to_share and doc_complete", "choice — labelled option plus confidence, used for pii_present", "score — 0..1 with confidence, used for risk"] },
+    { "dot": "rose", "title": "Verdict ladder", "items": ["confidence ≥ 0.9 → act (auto-approve)", "0.7 – 0.9 → reroute (human review queue)", "< 0.7 → human (reject and escalate)"] },
+    { "dot": "emerald", "title": "Redaction before send", "items": ["9 PII fields collapse to boolean presence flags; salary bands to \"32k\"", "Jev never sees raw values — the n8n Code node masks before the call", "400 invalid JSON, 422 schema failure, X-Correlation-Id on every reply"] }
+  ]
+}

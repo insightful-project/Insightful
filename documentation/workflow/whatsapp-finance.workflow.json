@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Quick Finance App — WhatsApp Flow",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "meta", "label": "Meta / WhatsApp" },
+    { "id": "ext", "label": "Third party" },
+    { "id": "flow", "label": "n8n — Quick Finance App" }
+  ],
+  "phases": [
+    { "id": "ingest", "label": "Ingest", "fromCol": 0, "toCol": 0 },
+    { "id": "validate", "label": "Validate", "fromCol": 1, "toCol": 1, "variant": "emphasis" },
+    { "id": "documents", "label": "Document checks", "fromCol": 2, "toCol": 3 },
+    { "id": "decide", "label": "Decide", "fromCol": 4, "toCol": 4, "variant": "emphasis" },
+    { "id": "dispatch", "label": "Dispatch", "fromCol": 5, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": [
+    "webhook",
+    "validate",
+    "download",
+    "graph",
+    "img-gate",
+    "merge",
+    "dispatch"
+  ],
+  "nodes": [
+    { "id": "flow-form", "lane": "meta", "col": 0, "type": "external", "label": "WhatsApp Flow", "sublabel": "6 screens · v7.1", "width": 124 },
+    { "id": "webhook", "lane": "flow", "col": 0, "type": "backend", "label": "Webhook + parse", "sublabel": "POST /whatsapp-flow", "width": 132 },
+    { "id": "validate", "lane": "flow", "col": 1, "type": "security", "label": "Validate fields", "sublabel": "Code + If", "width": 124 },
+    { "id": "download", "lane": "flow", "col": 2, "type": "backend", "label": "Download document", "sublabel": "binary", "width": 132 },
+    { "id": "graph", "lane": "meta", "col": 2, "type": "external", "label": "Meta Graph API", "sublabel": "v19.0 media", "width": 124 },
+    { "id": "img-gate", "lane": "flow", "col": 3, "type": "security", "label": "Is image file?", "width": 118 },
+    { "id": "vision", "lane": "ext", "col": 3, "type": "cloud", "label": "OpenAI Vision", "sublabel": "quality + extract", "width": 128 },
+    { "id": "merge", "lane": "flow", "col": 4, "type": "security", "label": "Merge + all clear?", "sublabel": "v3 · index 0/1", "width": 138 },
+    { "id": "dispatch", "lane": "flow", "col": 5, "type": "security", "label": "Format + fan out", "sublabel": "sheets · email · whatsapp", "width": 156 }
+  ],
+  "edges": [
+    { "from": "flow-form", "to": "webhook", "label": "data exchange", "role": "main" },
+    { "from": "webhook", "to": "validate", "role": "main" },
+    { "from": "validate", "to": "download", "label": "passed", "role": "main" },
+    { "from": "download", "to": "graph", "label": "GET /{media_id}", "role": "branch" },
+    { "from": "graph", "to": "img-gate", "label": "media binary", "role": "branch" },
+    { "from": "img-gate", "to": "vision", "label": "image", "role": "branch" },
+    { "from": "vision", "to": "merge", "label": "extracted fields", "role": "branch" },
+    { "from": "img-gate", "to": "merge", "label": "PDF auto pass", "role": "main" },
+    { "from": "merge", "to": "dispatch", "label": "all clear", "role": "main" },
+    { "from": "validate", "to": "webhook", "label": "validation failed", "role": "return", "variant": "dashed" },
+    { "from": "merge", "to": "webhook", "label": "docs failed", "role": "return", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "rose", "title": "Not production ready", "items": ["Every workflow export ships active: false", "The OpenAI Vision node, the Google Sheets node and the email node all carry credentials: null", "Sheets documentId and both email addresses are still YOUR_GOOGLE_SHEET_ID_HERE / yourfinancecompany.co.za placeholders"] },
+    { "dot": "amber", "title": "Two names overpromise", "items": ["The Code node is called Parse & Decrypt Payload but references no key and makes no crypto call", "redaction-contract.md specifies the PII masking, yet no node in any workflow implements it and none call Jev"] },
+    { "dot": "cyan", "title": "Data volume", "items": ["The payload carries 30+ fields including SA ID, bank account, salary and home address", "Documents arrive as Meta media IDs, so the flow re-downloads each file before a model sees it", "quick_finance_MOCK_TEST.n8n swaps the Meta and OpenAI calls for inline fixtures — 12 nodes, zero external calls"] }
+  ]
+}
