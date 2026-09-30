@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Data Map — Offline-First Sync to Postgres",
+    "quality_profile": "showcase"
+  },
+  "stages": [
+    {
+      "label": "Client — Dexie"
+    },
+    {
+      "label": "API — NestJS"
+    },
+    {
+      "label": "Postgres (lifeos + codeSpace)"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "kv",
+      "type": "database",
+      "label": "kvStore",
+      "sublabel": "preferences + tokens",
+      "stage": 0,
+      "row": 0,
+      "yOffset": 20
+    },
+    {
+      "id": "dexie",
+      "type": "database",
+      "label": "Dexie mirror",
+      "sublabel": "12 tables, synced flag",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "sync",
+      "type": "backend",
+      "label": "Sync engine",
+      "sublabel": "reads unsynced, retries 5×",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Facelet + Stub",
+      "sublabel": "Drizzle + RlsInterceptor",
+      "stage": 1,
+      "row": 1,
+      "yOffset": 40
+    },
+    {
+      "id": "users",
+      "type": "database",
+      "label": "users",
+      "sublabel": "PK device_id",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "lifeos",
+      "type": "database",
+      "label": "lifeos tables",
+      "sublabel": "Finance · Planner · Health · Idem",
+      "stage": 2,
+      "row": 1,
+      "width": 168
+    },
+    {
+      "id": "authcs",
+      "type": "security",
+      "label": "Auth + codeSpace",
+      "sublabel": "auth_tables · action_history",
+      "stage": 2,
+      "row": 2
+    }
+  ],
+  "flows": [
+    {
+      "from": "kv",
+      "to": "sync",
+      "label": "tokens"
+    },
+    {
+      "from": "dexie",
+      "to": "sync",
+      "label": "unsynced"
+    },
+    {
+      "from": "sync",
+      "to": "api",
+      "label": " ",
+      "labelDy": 80
+    },
+    {
+      "from": "api",
+      "to": "users",
+      "label": "RLS: user_isolation"
+    },
+    {
+      "from": "api",
+      "to": "lifeos",
+      "label": "writes",
+      "labelDx": 60,
+      "labelDy": 40
+    },
+    {
+      "from": "api",
+      "to": "authcs",
+      "label": "no RLS",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Row-level security",
+      "items": [
+        "user_isolation: device_id = current_setting('app.device_id')",
+        "Set per-request by RlsInterceptor inside the Drizzle tx",
+        "auth_users / device_sessions / password_reset_tokens excluded"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Consistency rules",
+      "items": [
+        "Offline-first — all reads from Dexie",
+        "Eventual — queued writes, retried up to 5×",
+        "Cascade delete on users(device_id); CAS token rotation"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Sensitivity tiers",
+      "items": [
+        "Public: deviceId, routine names, task titles",
+        "Sensitive: email, password_hash, refresh_token (PG, bcrypt)",
+        "Critical: JWT_SECRET, DB_PASSWORD (.env only)"
+      ]
+    }
+  ]
+}

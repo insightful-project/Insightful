@@ -17,9 +17,9 @@ TARGET="${VAULT}/10-Projects/Insightful/Diagrams"
 usage() { local code="${1:-1}"; echo "usage: $0 [--target <mirror-dir>]"; exit "$code"; }
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --target) TARGET="${2:?missing arg}"; shift 2 ;;
-    -h|--help) usage 0 ;;
-    *) usage ;;
+   ( --target) TARGET="${2:?missing arg}"; shift 2 ;;
+   ( -h|--help) usage 0 ;;
+   (*) usage 1 ;;
   esac
 done
 

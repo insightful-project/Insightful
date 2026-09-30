@@ -1,0 +1,13 @@
+{
+  "name": "insightful-jev",
+  "version": "1.0.0",
+  "description": "Jev Decision Service for Insightful",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Class Hierarchy — Superclass Contracts",
+    "quality_profile": "showcase",
+    "visual_preset": "blueprint"
+  },
+  "components": [
+    {
+      "id": "codespace",
+      "type": "database",
+      "label": "codeSpace",
+      "sublabel": "models + contracts",
+      "pos": [
+        200,
+        80
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "base",
+      "type": "backend",
+      "label": "@insightful/base",
+      "sublabel": "Foundation, Facelet, AppException, DomainEntity",
+      "pos": [
+        200,
+        260
+      ],
+      "size": [
+        240,
+        60
+      ]
+    },
+    {
+      "id": "nestjs",
+      "type": "backend",
+      "label": "NestJS — life-os-v2",
+      "sublabel": "Stubs + Facades + Facelets + Processes",
+      "pos": [
+        200,
+        440
+      ],
+      "size": [
+        280,
+        60
+      ]
+    },
+    {
+      "id": "java",
+      "type": "backend",
+      "label": "Java codeSpace",
+      "sublabel": "Foundation<T> + Spring Boot",
+      "pos": [
+        600,
+        540
+      ],
+      "size": [
+        220,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "codeSpace (Contract Layer)",
+      "wraps": [
+        "codespace"
+      ],
+      "pad": 32
+    },
+    {
+      "kind": "region",
+      "label": "@insightful/base (Superclasses)",
+      "wraps": [
+        "base"
+      ],
+      "pad": 32
+    },
+    {
+      "kind": "region",
+      "label": "NestJS — life-os-v2",
+      "wraps": [
+        "nestjs"
+      ],
+      "pad": 48
+    },
+    {
+      "kind": "region",
+      "label": "Java codeSpace (Spring Boot)",
+      "wraps": [
+        "java"
+      ],
+      "pad": 32
+    }
+  ],
+  "connections": [
+    {
+      "from": "codespace",
+      "to": "base",
+      "label": "defines contracts",
+      "labelDy": 30,
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "from": "base",
+      "to": "nestjs",
+      "label": "Facelet + AppException",
+      "labelDy": 40,
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "NestJS Stubs",
+      "items": [
+        "Plain @Injectable() — no Foundation inheritance",
+        "Direct Drizzle ORM on flat-column tables",
+        "One stub per domain (Fitness, Nutrition, etc.)"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Foundation<T>",
+      "items": [
+        "Java codeSpace ONLY — Spring Boot JSONB tables",
+        "Generic CRUD on DomainEntity JSONB column",
+        "Incompatible with NestJS flat-column stubs"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Entity Contract",
+      "items": [
+        "Self-describing: FIELD codes, ACTION constants",
+        "Token: hash@type@shard@timestamp",
+        "Co-located Zod schema for validation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Branch Pipeline — dev → stable → live",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    {
+      "id": "dev",
+      "label": "dev"
+    },
+    {
+      "id": "stable",
+      "label": "stable"
+    },
+    {
+      "id": "live",
+      "label": "live"
+    },
+    {
+      "id": "hotfix",
+      "label": "hotfix path",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "develop",
+      "label": "Development",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "integrate",
+      "label": "Integration & QA",
+      "fromCol": 3,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "ship",
+      "label": "Production",
+      "fromCol": 4,
+      "toCol": 5,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "feature",
+    "pr-dev",
+    "gates-dev",
+    "gates-stable",
+    "gates-live",
+    "deploy"
+  ],
+  "nodes": [
+    {
+      "id": "feature",
+      "lane": "dev",
+      "col": 0,
+      "type": "cloud",
+      "label": "Feature branch",
+      "sublabel": "branched from dev"
+    },
+    {
+      "id": "pr-dev",
+      "lane": "dev",
+      "col": 1,
+      "type": "cloud",
+      "label": "PR to dev",
+      "sublabel": "PR required"
+    },
+    {
+      "id": "gates-dev",
+      "lane": "dev",
+      "col": 2,
+      "type": "backend",
+      "label": "dev gates",
+      "sublabel": "lint · typecheck · test"
+    },
+    {
+      "id": "gates-stable",
+      "lane": "stable",
+      "col": 3,
+      "type": "backend",
+      "label": "stable gates",
+      "sublabel": "+ build · security scan"
+    },
+    {
+      "id": "gates-live",
+      "lane": "live",
+      "col": 4,
+      "type": "security",
+      "label": "live gates",
+      "sublabel": "+ docker · scan · smoke",
+      "width": 132
+    },
+    {
+      "id": "deploy",
+      "lane": "live",
+      "col": 5,
+      "type": "cloud",
+      "label": "Rolling deploy",
+      "sublabel": "zero-downtime",
+      "width": 104
+    },
+    {
+      "id": "hotfix",
+      "lane": "hotfix",
+      "col": 2,
+      "type": "external",
+      "label": "Hotfix",
+      "sublabel": "cherry-pick, bypasses stable",
+      "width": 120
+    },
+    {
+      "id": "backfill",
+      "lane": "hotfix",
+      "col": 1,
+      "type": "external",
+      "label": "Back-merge",
+      "sublabel": "live → dev",
+      "width": 112
+    }
+  ],
+  "edges": [
+    {
+      "from": "feature",
+      "to": "pr-dev",
+      "role": "main"
+    },
+    {
+      "from": "pr-dev",
+      "to": "gates-dev",
+      "role": "main"
+    },
+    {
+      "from": "gates-dev",
+      "to": "gates-stable",
+      "label": "merged to dev",
+      "role": "main"
+    },
+    {
+      "from": "gates-stable",
+      "to": "gates-live",
+      "label": "reviewed PR",
+      "role": "main"
+    },
+    {
+      "from": "gates-live",
+      "to": "deploy",
+      "label": "2 approvals",
+      "role": "main"
+    },
+    {
+      "from": "gates-dev",
+      "to": "hotfix",
+      "label": "urgent fix",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "from": "hotfix",
+      "to": "gates-live",
+      "label": "all gates still run",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "from": "hotfix",
+      "to": "backfill",
+      "label": "after deploy",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "from": "backfill",
+      "to": "pr-dev",
+      "label": "re-merge fix",
+      "role": "return",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Branch protection",
+      "items": [
+        "dev — 0 reviews, gates: lint, typecheck, test",
+        "stable — 1 review, adds build + security scan",
+        "live — 2 reviews, admins included, no bypass"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Zero-downtime on live",
+      "items": [
+        "Rolling update, 2 replicas, start-first",
+        "Healthcheck gate on every service",
+        "SIGTERM drains connections before exit"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Still to configure",
+      "items": [
+        "Branch protection rules not applied on GitHub",
+        "Graceful shutdown handlers pending",
+        "Rolling update config pending in prod compose"
+      ]
+    }
+  ]
+}

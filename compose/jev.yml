@@ -1,0 +1,53 @@
+# Insightful — Jev Decision Service
+# POST /decision RPC on the insightful bridge, MCP surface for agents.
+# API: http://localhost:4002  │  MCP: stdio via wrapper.sh
+# Usage: podman compose -f compose/jev.yml up -d
+name: jev
+
+networks:
+  insightful:
+    external: true
+    name: insightful
+
+services:
+  jev:
+    build:
+      context: .
+      dockerfile: Dockerfile.jev
+    image: insightful/jev:1.0.0
+    container_name: insightful-jev
+    restart: unless-stopped
+    stop_grace_period: 30s
+    env_file: .env
+    environment:
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      JEV_PORT: ${JEV_PORT:-4002}
+      NODE_ENV: ${NODE_ENV:-production}
+    ports:
+      - "127.0.0.1:${JEV_PORT:-4002}:4002"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${JEV_PORT:-4002}/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - insightful
